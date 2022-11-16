@@ -5,13 +5,7 @@ alias ls="exa"
 alias tree="exa -T -L=2 --icons -F --git-ignore"
 
 
-
-
-
 # functions
-
-
-
 # git clone and cd to a repo directory and run npm/yarn
 clone() {
   git clone $@
