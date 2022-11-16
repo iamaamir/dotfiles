@@ -32,7 +32,7 @@
 	changed = !sh -c 'git log $1@{1}..$1@{0} "$@"'
 	# commit and push changes to the current branch
 	send = "!f() { git commit -am \"$@\" && git push; }; f"
-	# remote a branch from local and remote with force
+	# remove a branch from local and remote with force
 	drop = "!f() { git branch -D \"$1\" && git push origin --delete \"$1\"; }; f"
 [push]
 	# When pushing code, always push only your current branch to a branch of the same name
