@@ -22,7 +22,7 @@
     
     # on mac gitk does not comes with git
     # use brew install git git-gui
-	ui = !git-gui
+	ui = !git-gui &
     visual = !gitk
     # undo last commit
     undo=reset --soft HEAD^
