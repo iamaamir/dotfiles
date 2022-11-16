@@ -1,0 +1,6 @@
+alias reload="source ~/.zshrc"
+alias xls="exa -lh"
+alias cat="bat"
+alias ls="exa"
+alias tree="exa -T -L=2 --icons -F --git-ignore"
+
