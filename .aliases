@@ -4,3 +4,25 @@ alias cat="bat"
 alias ls="exa"
 alias tree="exa -T -L=2 --icons -F --git-ignore"
 
+
+
+
+
+# functions
+
+
+
+# git clone and cd to a repo directory and run npm/yarn
+clone() {
+  git clone $@
+  if [ "$2" ]; then
+    cd "$2"
+  else
+    cd $(basename "$1" .git)
+  fi
+  if [[ -r "./yarn.lock" ]]; then
+    yarn
+  elif [[ -r "./package-lock.json" ]]; then
+    npm install
+  fi
+}
