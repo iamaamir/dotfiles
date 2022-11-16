@@ -24,13 +24,14 @@
     # use brew install git git-gui
 	ui = !git-gui
     visual = !gitk
-    
     # undo last commit
     undo=reset --soft HEAD^
     # check the uncommited changes
     changes=diff --name-status -r
 	# To see what new commits have been created by the last command (typically after a "git pull") : 
 	changed = !sh -c 'git log $1@{1}..$1@{0} "$@"'
+	# commit and push changes to the current branch
+	send = !sh -c 'git commit -am $1@{1}..$1@{0} "$@" && git push'
 [push]
 	# When pushing code, always push only your current branch to a branch of the same name
 	default = current
