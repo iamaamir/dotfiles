@@ -13,6 +13,8 @@
 	ll = log --stat --abbrev-commit
 	# List of my own commits
 	mine = !git log --branches=* --no-merges --pretty=format:'%C(reset)%C(bold)%cd %C(reset)%C(white)%s  %C(reset)%h' --date=short --author=\"$(git config user.name)\"
+	# show the user name of the current repo
+	whoami = config user.name
 	# List of branches ordered by last change
 	branches = for-each-ref --sort=-committerdate refs/heads/ --format='%(color:bold)%(refname:short)%(color:reset)\t%(committerdate:relative)'
 	# List of files with merge conflicts
@@ -54,3 +56,27 @@
     frag = white
     old = red bold
     new = green bold
+
+
+[core]
+	# Make `git rebase` safer on macOS.
+	# More info: <http://www.git-tower.com/blog/make-git-rebase-safe-on-osx/>
+	trustctime = false
+
+	# Prevent showing files whose names contain non-ASCII symbols as unversioned.
+	# http://michael-kuehnel.de/git/2014/11/21/git-mac-osx-and-german-umlaute.html
+	precomposeunicode = false
+
+	# Speed up commands involving untracked files such as `git status`.
+	# https://git-scm.com/docs/git-update-index#_untracked_cache
+	untrackedCache = true
+
+[color "branch"]
+	current = yellow reverse
+	local = yellow
+	remote = green
+
+[color "status"]
+	added = green
+	changed = red
+	untracked = cyan
