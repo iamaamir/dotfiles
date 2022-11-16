@@ -84,6 +84,9 @@ brew install git
 brew install git-gui
 brew install git-lfs
 brew install stow
+brew install --cask flux
+brew install --cask raycast
+brew install --cask shottr
 # brew install gs
 # brew install imagemagick --with-webp
 # brew install lua

@@ -9,6 +9,10 @@ alias update='sudo softwareupdate -i -a; brew update; brew upgrade; brew cleanup
 #ips
 alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
 alias localip="ipconfig getifaddr en0"
+# mimic vim quit
+alias :q='exit'
+# edit zsh config
+alias ze='nano ~/.zshrc'
 
 
 # functions
