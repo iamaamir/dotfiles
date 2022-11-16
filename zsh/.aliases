@@ -20,3 +20,8 @@ clone() {
     npm install
   fi
 }
+
+# Make a directory and cd to it
+take() {
+  mkdir -p $@ && cd ${@:$#}
+}
