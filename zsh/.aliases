@@ -3,7 +3,7 @@ alias xls="exa -lh"
 alias cat="bat"
 alias ls="exa"
 alias tree="exa -T -L=2 --icons -Fa"
-alias drop="rm -rf"
+alias rmf="rm -rf"
 
 
 # functions
