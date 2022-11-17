@@ -51,3 +51,15 @@ function fs() {
 		du $arg .[^.]* ./*;
 	fi;
 }
+
+
+# remove node modules and install fresh
+function nfresh(){
+  echo "removing node_modules ..."
+  rm -rf node_modules
+  if [[ -r "./yarn.lock" ]]; then
+    yarn
+  elif [[ -r "./package-lock.json" ]]; then
+    npm install
+  fi
+}
