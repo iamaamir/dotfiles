@@ -21,15 +21,14 @@
 	wtf = diff --name-only --diff-filter=U
 	# Cancel local commits in the branch: git fuck master
 	fuck = "!f() { git reset --hard origin/$1; }; f"
-    
-    # on mac gitk does not comes with git
-    # use brew install git git-gui
+	# on mac gitk does not comes with git
+	# use brew install git git-gui
 	ui = !git-gui &
-    visual = !gitk
-    # undo last commit
-    undo=reset --soft HEAD^
-    # check the uncommited changes
-    changes=diff --name-status -r
+	visual = !gitk
+	# undo last commit
+	undo=reset --soft HEAD^
+	# check the uncommited changes
+	changes=diff --name-status -r
 	# To see what new commits have been created by the last command (typically after a "git pull") : 
 	changed = !sh -c 'git log $1@{1}..$1@{0} "$@"'
 	# commit and push changes to the current branch
