@@ -13,6 +13,8 @@ alias localip="ipconfig getifaddr en0"
 alias :q='exit'
 # edit zsh config
 alias ze='nano ~/.zshrc'
+#handy color map for shells
+alias colormap='for i in {0..255}; do print -Pn "%K{$i}  %k%F{$i}${(l:3::0:)i}%f " ${${(M)$((i%6)):#3}:+$'\n'}; done'
 
 
 # functions
