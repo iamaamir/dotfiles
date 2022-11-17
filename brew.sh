@@ -107,9 +107,15 @@ brew install jq
 brew install yarn
 
 
+
 # some better drop in replacements
 brew install exa #ls
 brew install bat #cat
+
+
+# coding font
+brew tap homebrew/cask-fonts
+brew install --cask font-fira-code
 
 
 # Remove outdated versions from the cellar.
