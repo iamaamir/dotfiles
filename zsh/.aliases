@@ -81,3 +81,7 @@ bk() {
         | cut -d$'\t' -f2 \
         | xargs open
 }
+# pull a cheatsheet
+cht() {
+  curl -m 10 "http://cheat.sh/${1}" 2>/dev/null || printf '%s\n' "[ERROR] Something broke"
+}
