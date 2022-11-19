@@ -17,6 +17,8 @@ alias ze='nano ~/.zshrc'
 alias colormap='for i in {0..255}; do print -Pn "%K{$i}  %k%F{$i}${(l:3::0:)i}%f " ${${(M)$((i%6)):#3}:+$'\n'}; done'
 # list repos and cd into the one
 alias repos='cd $(ls -d ~/git/*/* | fzf)'
+#shortcut for brew install
+alias i="brew install"
 
 # functions
 # git clone and cd to a repo directory and run npm/yarn
