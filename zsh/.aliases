@@ -4,7 +4,7 @@ alias cat="bat"
 alias ls="exa"
 alias tree="exa -T -L=2 --icons -Fa"
 alias rmf="rm -rf"
-# Get macOS Software Updates, and update installed Ruby gems, Homebrew, npm, and their installed packages
+# Get macOS Software Updates, and update installed Ruby gems, Homebrew and their installed packages
 alias update='sudo softwareupdate -i -a; brew update; brew upgrade; brew cleanup; sudo gem update --system; sudo gem update; sudo gem cleanup'
 #ips
 alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
@@ -82,6 +82,6 @@ bk() {
         | xargs open
 }
 # pull a cheatsheet
-cht() {
+tldr() {
   curl -m 10 "http://cheat.sh/${1}" 2>/dev/null || printf '%s\n' "[ERROR] Something broke"
 }
