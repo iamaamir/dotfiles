@@ -1,5 +1,19 @@
 " no need to be compatible with vi
 set nocompatible
+" enable line numbers
+set relativenumber
+set number
+" enable mouse
+set mouse=a
+syntax on
+set cursorline
+:highlight Cursorline cterm=bold ctermbg=black
+
+set hlsearch
+
+set ignorecase
+set smartcase
+
 
 if v:progname =~? "evim"
   finish
