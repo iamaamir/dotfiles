@@ -2,6 +2,7 @@
 set nocompatible
 " enable line numbers
 set relativenumber
+set showmatch
 set number
 " enable mouse
 set mouse=a
