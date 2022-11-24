@@ -102,3 +102,14 @@ man() {
 		LESS_TERMCAP_us=$(printf "\e[1;32m") \
 			man "$@"
 }
+
+
+
+# search and add result to vim quickfix
+fury(){
+    local pat=$1
+    local l="${2:-.}"
+   #local result=$()
+   #echo $result
+   vim -q <(grep -n "$pat" $l) +:copen
+}
