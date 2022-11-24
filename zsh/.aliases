@@ -19,6 +19,8 @@ alias colormap='for i in {0..255}; do print -Pn "%K{$i}  %k%F{$i}${(l:3::0:)i}%f
 alias repos='cd $(ls -d ~/git/*/* | fzf)'
 #shortcut for brew install
 alias i="brew install"
+alias about ="neofetch"
+alias whoami="id -un"
 
 # functions
 # git clone and cd to a repo directory and run npm/yarn
