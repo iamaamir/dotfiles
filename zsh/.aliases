@@ -21,6 +21,8 @@ alias repos='cd $(ls -d ~/git/*/* | fzf)'
 alias i="brew install"
 alias about="neofetch"
 alias whoami="id -un"
+# a bit faster grep
+alias grep="grep -IEr --exclude-dir=.git --exclude-dir=node_modules"
 
 # functions
 # git clone and cd to a repo directory and run npm/yarn
