@@ -6,7 +6,6 @@ alias mirror='wget -mpEk'
 alias tree="exa -T -L=2 --icons -Fa"
 alias rmf="rm -rf"
 # Get macOS Software Updates, and update installed Ruby gems, Homebrew and their installed packages
-alias update='sudo softwareupdate -i -a; brew update; brew upgrade; brew cleanup; sudo gem update --system; sudo gem update; sudo gem cleanup'
 #ips
 alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
 alias localip="ipconfig getifaddr en0"
