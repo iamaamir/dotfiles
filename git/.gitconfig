@@ -40,6 +40,12 @@
   #snapshots
   snapshot = !git stash save "snapshot: $(date)" && git stash apply "stash@{0}"
   snapshots = !git stash list --grep snapshot
+  new = "!f(){\
+            local desc=$(echo $2 | tr ' ' '-');\
+            git checkout develop;\
+            git pull origin develop;\
+            git checkout -b feature/$SQUAD-$1-$desc;\
+          }; f"
 
 [push]
   # When pushing code, always push only your current branch to a branch of the same name
