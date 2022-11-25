@@ -1,0 +1,163 @@
+
+:root {
+  --megabar_border_roundness: 20px;
+  --general_toolbar_color_toolbars: linear-gradient(#f9f9fa,#f9f9fa);
+  --general_toolbar_color_navbar: linear-gradient(#f9f9fa,#f9f9fa);
+  --general_toolbar_text_color: inherit;
+  --general_toolbar_text_shadow: transparent;
+}
+
+
+/* tabs couts */
+tabs {
+  counter-reset: tab-counter;
+}
+
+tab:nth-child(1) .tab-content::before,
+tab:nth-child(2) .tab-content::before,
+tab:nth-child(3) .tab-content::before,
+tab:nth-child(4) .tab-content::before,
+tab:nth-child(5) .tab-content::before,
+tab:nth-child(6) .tab-content::before,
+tab:nth-child(7) .tab-content::before,
+tab:nth-child(8) .tab-content::before  {
+  counter-increment: tab-counter;
+  content: counter(tab-counter) "";
+
+  position: absolute;
+  left: 24px;
+  top: 7px;
+  padding: 0px 4px;
+  border-radius: 7px;
+  opacity: 1;
+  background: #ff0c;
+  color: #000;
+  opacity: : .9;
+  font-size: 90%;
+}
+
+/* show vertical lines between tabs */
+tab:not(:first-child) {
+  border-left: 1px solid #0004 !important;
+}
+
+
+
+/* rounded url bar */
+#urlbar #urlbar-background,
+#urlbar, #urlbar-input-container,
+#searchbar, .searchbar-textbox {
+  border-radius: var(--megabar_border_roundness) !important;
+}
+
+#urlbar[focused="true"]:not([usertyping="true"]) .urlbarView,
+#urlbar .search-one-offs,
+#urlbar .search-one-offs .search-panel-header,
+#urlbar .search-one-offs .search-panel-one-offs-container {
+  border-bottom-left-radius: var(--megabar_border_roundness) !important;
+  border-bottom-right-radius: var(--megabar_border_roundness) !important;
+}
+
+#urlbar .search-one-offs .search-setting-button-compact {
+  border-bottom-right-radius: var(--megabar_border_roundness) !important;
+}
+
+#urlbar[focused="true"][open] #urlbar-input-container {
+  border-bottom-left-radius: 0px !important;
+  border-bottom-right-radius: 0px !important;
+}
+
+
+#urlbar[open="true"] #urlbar-background,
+#urlbar[open="true"],
+#urlbar[open="true"] #urlbar-input-container {
+  border-radius: calc(var(--megabar_border_roundness) / 1.5) !important;
+}
+
+#urlbar[focused="true"]:not([usertyping="true"]) .urlbarView,
+#urlbar .search-one-offs,
+#urlbar .search-one-offs .search-panel-header,
+#urlbar .search-one-offs .search-panel-one-offs-container {
+  border-bottom-left-radius: calc(var(--megabar_border_roundness) / 1.5) !important;
+  border-bottom-right-radius: calc(var(--megabar_border_roundness) / 1.5) !important;
+}
+
+#urlbar .search-one-offs .search-setting-button-compact {
+  border-bottom-right-radius: calc(var(--megabar_border_roundness) / 1.5) !important;
+}
+
+
+#nav-bar:not(:-moz-lwtheme) {
+  appearance: none !important;
+  background: var(--general_toolbar_color_navbar, inherit) !important;
+}
+
+#main-window toolbar:not(:-moz-lwtheme):not(#TabsToolbar):not(#toolbar-menubar):not(#nav-bar) {
+  appearance: none !important;
+  background: var(--general_toolbar_color_toolbars, inherit) !important;
+}
+
+/* Fix issue aboves code creates on Fx75+ */
+#nav-bar:not(:-moz-lwtheme) #urlbar ::-moz-selection {
+  background-color: Highlight !important;
+  color: HighlightText !important;
+}
+
+/**/
+
+#main-window:not(:-moz-lwtheme) #PersonalToolbar #bookmarks-menu-button::after,
+#main-window:not(:-moz-lwtheme) toolbar > toolbarbutton > .toolbarbutton-text,
+#main-window:not(:-moz-lwtheme) toolbar #stop-reload-button toolbarbutton > .toolbarbutton-text,
+#main-window:not(:-moz-lwtheme) toolbar #PanelUI-button toolbarbutton > .toolbarbutton-text,
+#main-window:not(:-moz-lwtheme) toolbar > toolbarbutton >.toolbarbutton-badge-stack .toolbarbutton-text,
+#main-window:not(:-moz-lwtheme) #nav-bar-customization-target > toolbarbutton > .toolbarbutton-text,
+#main-window:not(:-moz-lwtheme) #PlacesToolbarItems toolbarbutton > :is(label,description) {
+  color: var(--general_toolbar_text_color, inherit) !important;
+  text-shadow: 1px 1px 1px var(--general_toolbar_text_shadow, inherit) !important;
+}
+
+/* findbar */
+#main-window :is(.browserContainer,#viewSource):not(:-moz-lwtheme) :is(findbar,#FindToolbar) {
+  background: var(--general_toolbar_color_toolbars, inherit) !important;
+}
+
+#main-window[style*='--lwt-header-image']:-moz-lwtheme :is(.browserContainer,#viewSource) :is(findbar,#FindToolbar) {
+  background: var(--lwt-header-image) !important;
+  background-position: calc(100vw - 5px) !important;
+}
+
+#main-window[style*='--lwt-header-image']:-moz-lwtheme :is(.browserContainer,#viewSource) :is(findbar,#FindToolbar) :is(.toolbarbutton-icon,.toolbarbutton-text) {
+  color: var(--lwt-text-color) !important;
+  fill: var(--lwt-text-color) !important;
+}
+#main-window[style*='--lwt-header-image']:-moz-lwtheme-brighttext :is(.browserContainer,#viewSource) :is(findbar,#FindToolbar) :is(.toolbarbutton-icon,.toolbarbutton-text) {
+  text-shadow: 1px 1px 1px black !important;
+}
+
+@media (-moz-content-prefers-color-scheme: dark) {
+	#main-window[style*='--lwt-header-image']:-moz-lwtheme :is(.browserContainer,#viewSource) :is(findbar,#FindToolbar) :is(.toolbarbutton-icon,.toolbarbutton-text) {
+	  text-shadow: 1px 1px 1px black !important;
+	}
+}
+
+
+.browserContainer > findbar > #findbar-close-container {
+  background-color: unset !important;
+}
+
+/* fix Firefox + Windows 8.1 + lw-theme bug (occurring without custom code too) */
+@media (-moz-platform: windows-win8), (-moz-os-version:windows-win8) {
+	#navigator-toolbox:-moz-lwtheme {
+	  border: unset !important;
+	}
+}
+
+/* bookmarks toolbar background */
+#main-window #navigator-toolbox #PersonalToolbar:not(#TabsToolbar):not(#toolbar-menubar):not(#nav-bar):not(:-moz-lwtheme),
+#main-window #navigator-toolbox #PersonalToolbar:not(:-moz-lwtheme),
+#main-window #navigator-toolbox #PersonalToolbar:-moz-lwtheme,
+#main-window #navigator-toolbox #PersonalToolbar {
+  background: unset !important;
+  border: unset !important;
+  box-shadow: unset !important;
+}
