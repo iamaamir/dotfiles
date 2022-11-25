@@ -118,3 +118,11 @@ fury(){
         vim -q  $result
     fi
 }
+
+# open remote in browser
+# default to current branch
+# tested with githib and bitbucket on a macOx (zsh)
+gopen(){
+  open $(git config remote.origin.url | sed "s/git@\(.*\):\(.*\).git/https:\/\/\1\/\2/")/$1$2
+}
+
