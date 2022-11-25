@@ -2,6 +2,7 @@ alias reload="exec ${SHELL} -l"
 alias xls="exa -lh"
 alias cat="bat"
 alias ls="exa"
+alias mirror='wget -mpEk'
 alias tree="exa -T -L=2 --icons -Fa"
 alias rmf="rm -rf"
 # Get macOS Software Updates, and update installed Ruby gems, Homebrew and their installed packages
@@ -107,9 +108,14 @@ man() {
 
 # search and add result to vim quickfix
 fury(){
-    local pat=$1
-    local l="${2:-.}"
-   #local result=$()
-   #echo $result
-   vim -q <(grep -n "$pat" $l) +:copen
+   local pat=$1
+   local l="${2:-.}"
+   local result=$(grep -n "$pat" $l)
+   if [ -z "$result" ]
+   then 
+        echo "no result found"
+   else
+        #echo $result
+        vim -q  $result
+    fi
 }
