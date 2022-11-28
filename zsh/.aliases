@@ -109,7 +109,7 @@ man() {
 fury(){
    local pat=$1
    local l="${2:-.}"
-   local result=$(grep -n "$pat" $l)
+   local result=$(grep -rn "$pat" $l)
    if [ -z "$result" ]
    then 
         echo "no result found"
