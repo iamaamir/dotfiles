@@ -22,7 +22,7 @@ alias i="brew install"
 alias about="neofetch"
 alias whoami="id -un"
 # a bit faster grep
-alias grep="grep -IEr --exclude-dir=.git --exclude-dir=node_modules"
+alias grep="grep -IE --exclude-dir=.git --exclude-dir=node_modules"
 
 # functions
 # git clone and cd to a repo directory and run npm/yarn
@@ -115,7 +115,7 @@ fury(){
         echo "no result found"
    else
         #echo $result
-        vim -q  $result
+        vim -q <(echo "$result") +:copen
     fi
 }
 
