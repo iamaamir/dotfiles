@@ -22,6 +22,8 @@ set textwidth=79
 set expandtab
 set autoindent
 
+colorscheme habamax
+
 if v:progname =~? "evim"
   finish
 endif
@@ -51,3 +53,12 @@ augroup END
 if has('syntax') && has('eval')
   packadd! matchit
 endif
+
+
+
+
+call plug#begin()
+    Plug 'preservim/nerdtree', { 'on':  'NERDTreeToggle' }
+    Plug 'ctrlpvim/ctrlp.vim'
+call plug#end()
+
