@@ -27,6 +27,7 @@ alias grep="grep -IE --exclude-dir=.git --exclude-dir=node_modules"
 # functions
 # git clone and cd to a repo directory and run npm/yarn
 clone() {
+  cd ~/git
   git clone $@
   if [ "$2" ]; then
     cd "$2"
