@@ -47,6 +47,9 @@
             git checkout -b feature/$SQUAD-$1-$desc;\
           }; f"
 
+  ccb = "!git rev-parse --abbrev-ref HEAD | pbcopy"
+
+
 [push]
   # When pushing code, always push only your current branch to a branch of the same name
   default = current
