@@ -16,7 +16,7 @@
   # show the user name of the current repo
   whoami = config user.name
   # List of branches ordered by last change
-  branches = for-each-ref --sort=-committerdate refs/heads/ --format='%(color:bold)%(refname:short)%(color:reset)\t%(committerdate:relative)'
+  ls = for-each-ref --sort=-committerdate refs/heads/ --format='%(color:bold)%(refname:short)%(color:reset)\t%(committerdate:relative)'
   # List of files with merge conflicts
   wtf = diff --name-only --diff-filter=U
   # Cancel local commits in the branch: git fuck master
