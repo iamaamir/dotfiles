@@ -48,7 +48,8 @@
           }; f"
 
   ccb = "!git rev-parse --abbrev-ref HEAD | pbcopy"
-
+  # print working branch
+  pwb = "!git rev-parse --abbrev-ref HEAD" 
 
 [push]
   # When pushing code, always push only your current branch to a branch of the same name
