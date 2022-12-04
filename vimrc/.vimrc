@@ -81,7 +81,13 @@ function! s:load_plugins(t) abort
   endif
 endfunction
 
+" My auto commands
 augroup user_cmds
   autocmd!
   autocmd VimEnter * call timer_start(30, function('s:load_plugins'))
 augroup END
+
+" auto reload vimrc on save
+autocmd! BufWritePost $MYVIMRC source $MYVIMRC | echom "Reloaded"
+
+"My auto commands end
