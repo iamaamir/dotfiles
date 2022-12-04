@@ -1,3 +1,25 @@
+" Vim comes with quite a few default plugins
+" which are not always needed so lets disable some of them
+" for the sake of a little better startup time
+
+let g:loaded_gzip = 1
+let g:loaded_zip = 1
+let g:loaded_zipPlugin = 1
+let g:loaded_tar = 1
+let g:loaded_tarPlugin = 1
+let g:loaded_getscript = 1
+let g:loaded_getscriptPlugin = 1
+let g:loaded_vimball = 1
+let g:loaded_vimballPlugin = 1
+let g:loaded_2html_plugin = 1
+let g:loaded_matchparen = 1
+let g:loaded_logiPat = 1
+let g:loaded_rrhelper = 1
+let g:loaded_netrw = 1
+let g:loaded_netrwPlugin = 1
+let g:loaded_netrwSettings = 1
+
+" some fine tuning
 set autoindent
 set cursorline
 :highlight Cursorline cterm=bold ctermbg=black
@@ -43,13 +65,15 @@ let $FZF_DEFAULT_COMMAND='find . \( -name node_modules -o -name .git \) -prune -
 
 call plug#begin()
     Plug 'preservim/nerdtree', { 'on':  'NERDTreeToggle' }
+    Plug 'ryanoasis/vim-devicons'
+    Plug 'mhinz/vim-startify'
     Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
     Plug 'junegunn/fzf.vim'
 call plug#end()
 
 " if in case of lazy loading
 function! s:load_plugins(t) abort
-  echom "vim is ready"
+  " echom "vim is ready"
   " block cursor in normal mode, i-beam cursor in insert mode, and underline cursor in replace mode
   if empty($TMUX)
       let &t_SI = "\<Esc>]50;CursorShape=1\x7"
@@ -70,11 +94,16 @@ augroup vimrcEx
 augroup END
 
 augroup user_cmds
-  autocmd!
+  au!
   autocmd VimEnter * call timer_start(30, function('s:load_plugins'))
 augroup END
 
 " auto reload vimrc on save
 autocmd! BufWritePost $MYVIMRC source $MYVIMRC | echom "Reloaded"
+
+" Start NERDTree when Vim starts with a directory argument.
+autocmd StdinReadPre * let s:std_in=1
+autocmd VimEnter * if argc() == 1 && isdirectory(argv()[0]) && !exists('s:std_in') |
+    \ execute 'NERDTree' argv()[0] |  execute 'cd '.argv()[0] | endif
 
 "My auto commands end
