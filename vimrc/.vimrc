@@ -20,6 +20,10 @@ set smartcase
 set softtabstop=4
 set tabstop=4
 set textwidth=79
+set termguicolors
+
+
+
 syntax on
 
 colorscheme habamax
