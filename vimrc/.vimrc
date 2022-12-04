@@ -1,9 +1,3 @@
-" no need to be compatible with vi
-
-
-" enable line numbers
-" enable mouse
-" indention
 set autoindent
 set cursorline
 :highlight Cursorline cterm=bold ctermbg=black
@@ -22,8 +16,6 @@ set tabstop=4
 set textwidth=79
 set termguicolors
 
-
-
 syntax on
 
 colorscheme habamax
@@ -40,16 +32,6 @@ if &t_Co > 2 || has("gui_running")
   set hlsearch
 endif
 
-" Put these in an autocmd group, so that we can delete them easily.
-augroup vimrcEx
-  au!
-
-  " For all text files set 'textwidth' to 78 characters.
-  autocmd FileType text setlocal textwidth=78
-augroup END
-
-" Add optional packages.
-"
 " The matchit plugin makes the % command work better, but it is not backwards
 " compatible.
 if has('syntax') && has('eval')
@@ -58,7 +40,6 @@ endif
 
 " ignore these for fzf
 let $FZF_DEFAULT_COMMAND='find . \( -name node_modules -o -name .git \) -prune -o -print'
-
 
 call plug#begin()
     Plug 'preservim/nerdtree', { 'on':  'NERDTreeToggle' }
@@ -82,6 +63,12 @@ function! s:load_plugins(t) abort
 endfunction
 
 " My auto commands
+augroup vimrcEx
+  au!
+  " For all text files set 'textwidth' to 78 characters.
+  autocmd FileType text setlocal textwidth=78
+augroup END
+
 augroup user_cmds
   autocmd!
   autocmd VimEnter * call timer_start(30, function('s:load_plugins'))
