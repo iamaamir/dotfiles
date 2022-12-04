@@ -1,26 +1,26 @@
 " no need to be compatible with vi
-set nocompatible
+
+
 " enable line numbers
-set relativenumber
-set showmatch
-set number
 " enable mouse
-set mouse=a
-syntax on
+" indention
+set autoindent
 set cursorline
 :highlight Cursorline cterm=bold ctermbg=black
-
-set hlsearch
-
-set ignorecase
-set smartcase
-" indention
-set tabstop=4
-set softtabstop=4
-set shiftwidth=4
-set textwidth=79
 set expandtab
-set autoindent
+set hlsearch
+set ignorecase
+set mouse=a
+set nocompatible
+set number
+set relativenumber
+set shiftwidth=4
+set showmatch
+set smartcase
+set softtabstop=4
+set tabstop=4
+set textwidth=79
+syntax on
 
 colorscheme habamax
 
@@ -48,8 +48,6 @@ augroup END
 "
 " The matchit plugin makes the % command work better, but it is not backwards
 " compatible.
-" The ! means the package won't be loaded right away but when plugins are
-" loaded during initialization.
 if has('syntax') && has('eval')
   packadd! matchit
 endif
@@ -62,6 +60,14 @@ call plug#begin()
     Plug 'preservim/nerdtree', { 'on':  'NERDTreeToggle' }
     Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
     Plug 'junegunn/fzf.vim'
-    Plug 'neoclide/coc.nvim', {'branch': 'master', 'do': 'yarn install --frozen-lockfile'}
 call plug#end()
 
+" if in case of lazy loading
+function! s:load_plugins(t) abort
+  echom "vim is ready"
+endfunction
+
+augroup user_cmds
+  autocmd!
+  autocmd VimEnter * call timer_start(30, function('s:load_plugins'))
+augroup END
