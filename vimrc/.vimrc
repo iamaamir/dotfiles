@@ -62,7 +62,7 @@ endif
 
 " ignore these for fzf
 let $FZF_DEFAULT_COMMAND='find . \( -name node_modules -o -name .git \) -prune -o -print'
-
+" plugins
 call plug#begin()
     Plug 'preservim/nerdtree', { 'on':  'NERDTreeToggle' }
     Plug 'ryanoasis/vim-devicons'
@@ -72,8 +72,8 @@ call plug#begin()
 call plug#end()
 
 " if in case of lazy loading
-function! s:load_plugins(t) abort
-  " echom "vim is ready"
+function! s:AfterEnter(t) abort
+   echom "vim is ready"
   " block cursor in normal mode, i-beam cursor in insert mode, and underline cursor in replace mode
   if empty($TMUX)
       let &t_SI = "\<Esc>]50;CursorShape=1\x7"
@@ -95,7 +95,7 @@ augroup END
 
 augroup user_cmds
   au!
-  autocmd VimEnter * call timer_start(30, function('s:load_plugins'))
+  autocmd VimEnter * call timer_start(30, function('s:AfterEnter'))
 augroup END
 
 " auto reload vimrc on save
@@ -107,3 +107,16 @@ autocmd VimEnter * if argc() == 1 && isdirectory(argv()[0]) && !exists('s:std_in
     \ execute 'NERDTree' argv()[0] |  execute 'cd '.argv()[0] | endif
 
 "My auto commands end
+
+
+" Maps
+let mapleader=' '
+
+inoremap { {}<Esc>ha
+inoremap [ []<Esc>ha
+inoremap ( ()<Esc>ha
+
+nnoremap <leader>f :Files<CR>
+nnoremap <leader>e :NERDTreeToggle<CR>
+nnoremap <leader>s :Ag<CR>
+
