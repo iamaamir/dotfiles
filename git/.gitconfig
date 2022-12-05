@@ -53,6 +53,9 @@
   # get rid of untracked files
   # git clean can also be used but its very weird 
     rid = "!git ls-files -o --exclude-standard | fzf -m | xargs -I {} rm {}"
+    adjust = "!git commit --amend --no-edit"
+    overrule = "!git commit --amend --no-edit && git push --force-with-lease"
+
 [push]
   # When pushing code, always push only your current branch to a branch of the same name
     default = current
