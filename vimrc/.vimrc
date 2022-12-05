@@ -119,4 +119,5 @@ inoremap ( ()<Esc>ha
 nnoremap <leader>f :Files<CR>
 nnoremap <leader>e :NERDTreeToggle<CR>
 nnoremap <leader>s :Ag<CR>
+nnoremap <leader>t  :term<CR>
 
