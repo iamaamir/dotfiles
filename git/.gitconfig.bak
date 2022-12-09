@@ -1,0 +1,110 @@
+[init]
+    defaultBranch = main
+[user]
+    name = iamaamir
+    email = 8420386+iamaamir@users.noreply.github.com
+
+[alias]
+  # Sharable diff with disabled diff-so-fancy and +/- marks
+    patch = !git --no-pager diff --no-color
+  # Compact and readable log
+    l = log --graph --pretty=format:'%C(magenta)%h%C(blue)%d%Creset %s %C(blue bold)- %an, %ar%Creset'
+  # Log with list of changed files for each commit
+    ll = log --stat --abbrev-commit
+  # List of my own commits
+    mine = !git log --branches=* --no-merges --pretty=format:'%C(reset)%C(bold)%cd %C(reset)%C(white)%s  %C(reset)%h' --date=short --author=\"$(git config user.name)\"
+  # show the user name of the current repo
+    whoami = "!f() { git config user.name && git config user.email; }; f"
+  # List of branches ordered by last change
+    ls = for-each-ref --sort=-committerdate refs/heads/ --format='%(color:bold)%(refname:short)%(color:reset)\t%(committerdate:relative)'
+  # List of files with merge conflicts
+    wtf = diff --name-only --diff-filter=U
+  # Cancel local commits in the branch: git fuck master
+    fuck = "!f() { git reset --hard origin/$1; }; f"
+  # on mac gitk does not comes with git
+  # use brew install git git-gui
+    ui = !git-gui &
+    visual = !gitk
+  # undo last commit
+    undo=reset --soft HEAD^
+  # check the uncommited changes
+    changes=diff --name-status -r
+  # To see what new commits have been created by the last command (typically after a "git pull") : 
+    changed = !sh -c 'git log $1@{1}..$1@{0} "$@"'
+  # commit and push changes to the current branch
+    send = "!f() { git commit -am \"$@\" && git push; }; f"
+  # remove a branch from local and remote with force
+    drop = "!f() { git branch -D \"$1\" && git push origin --delete \"$1\"; }; f"
+  # show a list of contributors
+    contributors = shortlog --summary --numbered --email
+  #snapshots
+    snapshot = !git stash save "snapshot: $(date)" && git stash apply "stash@{0}"
+    snapshots = !git stash list --grep snapshot
+    new = "!f(){\
+        local desc=$(echo $2 | tr ' ' '-');\
+        git checkout develop;\
+        git pull origin develop;\
+        git checkout -b feature/$SQUAD-$1-$desc;\
+        }; f"
+
+    ccb = "!git rev-parse --abbrev-ref HEAD | pbcopy"
+  # print working branch
+    pwb = "!git rev-parse --abbrev-ref HEAD"
+    cb = "!git checkout `git branch | fzf| tr -d '[:space:]'` "
+  # get rid of untracked files
+  # git clean can also be used but its very weird 
+    rid = "!git ls-files -o --exclude-standard | fzf -m | xargs -I {} rm {}"
+    adjust = "!git commit --amend --no-edit"
+    overrule = "!git commit --amend --no-edit && git push --force-with-lease"
+
+[push]
+  # When pushing code, always push only your current branch to a branch of the same name
+    default = current
+
+[fetch]
+  # Automatically prune deleted branches from your local copy when you fetch (or pull)
+    prune = true
+
+[log]
+  # Show branch names with git log
+    decorate = short
+
+[color]
+    ui = auto
+
+[color "diff"]
+    meta = blue
+    frag = white
+    old = red bold
+    new = green bold
+
+
+[core]
+  # Make `git rebase` safer on macOS.
+  # More info: <http://www.git-tower.com/blog/make-git-rebase-safe-on-osx/>
+    trustctime = false
+
+  # Prevent showing files whose names contain non-ASCII symbols as unversioned.
+  # http://michael-kuehnel.de/git/2014/11/21/git-mac-osx-and-german-umlaute.html
+    precomposeunicode = false
+
+  # Speed up commands involving untracked files such as `git status`.
+  # https://git-scm.com/docs/git-update-index#_untracked_cache
+    untrackedCache = true
+
+[color "branch"]
+    current = yellow reverse
+    local = yellow
+    remote = green
+
+[color "status"]
+    added = green
+    changed = red
+    untracked = cyan
+
+
+[diff]
+# Git diff will use (i)ndex, (w)ork tree, (c)ommit and (o)bject
+# instead of a/b/c/d as prefixes for patches
+    mnemonicprefix = true
+    algorithm = patience

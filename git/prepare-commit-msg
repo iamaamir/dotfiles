@@ -1,0 +1,29 @@
+#!/bin/sh
+# author: iamaamir
+# automatically prepending an issue key from branch name to commit messages.
+
+
+# this is opt in hook and disabled by default
+# to enable it add export ENABLE_TICKET_MSG=true in your bashrc/zshrc
+if [ -z $ENABLE_TICKET_MSG ] || [ $ENABLE_TICKET_MSG = false ]; then
+  exit
+fi
+
+
+# check if commit is merge commit or a commit ammend
+if [ $2 = "merge" ] || [ $2 = "commit" ]; then
+    exit
+fi
+
+TICKET_KEY=`git branch | grep -o "\* \(.*/\)*[A-Z]\{2,\}-[0-9]\+" | grep -o "[A-Z]\{2,\}-[0-9]\+"`
+# skip with original msg if no key found in branch name
+if [ $? -ne 0 ]; then
+    exit
+fi
+
+# echo "pre commit key ${TICKET_KEY}"
+TEMP=`mktemp /tmp/commitmsg-XXXXX`
+(echo "[$TICKET_KEY]: $(cat  $1)") > $TEMP
+cat $TEMP > $1
+
+
