@@ -50,6 +50,7 @@
     ccb = "!git rev-parse --abbrev-ref HEAD | pbcopy"
   # print working branch
     pwb = "!git rev-parse --abbrev-ref HEAD"
+    cb = "!git checkout `git branch | fzf| tr -d '[:space:]'` "
   # get rid of untracked files
   # git clean can also be used but its very weird 
     rid = "!git ls-files -o --exclude-standard | fzf -m | xargs -I {} rm {}"

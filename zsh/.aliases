@@ -23,6 +23,7 @@ alias about="neofetch"
 alias whoami="id -un"
 # a bit faster grep
 alias grep="grep -IE --exclude-dir=.git --exclude-dir=node_modules"
+alias ghbrowse="gh browse -b `git rev-parse --abbrev-ref HEAD`"
 
 # functions
 # git clone and cd to a repo directory and run npm/yarn
