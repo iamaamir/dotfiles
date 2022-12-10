@@ -127,12 +127,13 @@ let mapleader=' '
 inoremap { {}<Esc>ha
 inoremap [ []<Esc>ha
 inoremap ( ()<Esc>ha
-
+inoremap jk <esc>
+inoremap <esc> <nop>
 nnoremap <leader>f :Files<CR>
 nnoremap <leader>e :NERDTreeToggle<CR>
 nnoremap <leader>s :Ag<CR>
-nnoremap <leader>t  :term<CR>
-" Maps end
+nnoremap <leader>t <c-z> 
+"Maps end
 
 
 " Use tab for trigger completion with characters ahead and navigate.
