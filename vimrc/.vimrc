@@ -79,6 +79,7 @@ call plug#begin()
     Plug 'preservim/nerdtree', { 'on':  'NERDTreeToggle' }
     Plug 'neoclide/coc.nvim', {'branch': 'release'}
     Plug 'ryanoasis/vim-devicons'
+    Plug 'tpope/vim-sensible'
     Plug 'mhinz/vim-startify'
     Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
     Plug 'junegunn/fzf.vim'
