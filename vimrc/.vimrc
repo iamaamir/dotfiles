@@ -22,7 +22,6 @@ let g:loaded_zipPlugin = 1
 " some fine tuning
 set autoindent
 set cursorline
-:highlight Cursorline cterm=bold ctermbg=black
 set expandtab
 set hlsearch
 set ignorecase
@@ -83,6 +82,7 @@ call plug#begin()
     Plug 'mhinz/vim-startify'
     Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
     Plug 'junegunn/fzf.vim'
+    Plug 'antoinemadec/coc-fzf'
 call plug#end()
 
 " if in case of lazy loading
@@ -115,6 +115,7 @@ augroup END
 " auto reload vimrc on save
 autocmd! BufWritePost $MYVIMRC source $MYVIMRC 
 
+
 " Start NERDTree when Vim starts with a directory argument.
 "autocmd StdinReadPre * let s:std_in=1
 "autocmd VimEnter * if argc() == 1 && isdirectory(argv()[0]) && !exists('s:std_in') |
@@ -134,6 +135,7 @@ nnoremap <leader>f :Files<CR>
 nnoremap <leader>e :NERDTreeToggle<CR>
 nnoremap <leader>s :Ag<CR>
 nnoremap <leader>t <c-z> 
+nnoremap gp :silent %!prettier --stdin-filepath %<CR>
 "Maps end
 
 
@@ -280,3 +282,10 @@ nnoremap <silent><nowait> <space>j  :<C-u>CocNext<CR>
 nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
 " Resume latest coc list.
 nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
+
+
+
+let g:markdown_fenced_languages = [
+      \ 'vim',
+      \ 'help'
+      \]
