@@ -90,21 +90,21 @@ let $FZF_DEFAULT_COMMAND='find . \( -name node_modules -o -name .git \) -prune -
 
 " plugins
 call plug#begin()
-    Plug 'preservim/nerdtree', { 'on':  'NERDTreeToggle' }
-    Plug 'sainnhe/everforest'
+    Plug 'antoinemadec/coc-fzf'
     Plug 'joshdick/onedark.vim'
-    Plug 'neoclide/coc.nvim', {'branch': 'release'}
-    Plug 'ryanoasis/vim-devicons'
-    Plug 'tpope/vim-sensible'
-    Plug 'mhinz/vim-startify'
     Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
     Plug 'junegunn/fzf.vim'
-    Plug 'antoinemadec/coc-fzf'
+    Plug 'mhinz/vim-startify'
+    Plug 'neoclide/coc.nvim', {'branch': 'release'}
+    Plug 'preservim/nerdtree', { 'on':  'NERDTreeToggle' }
+    Plug 'ryanoasis/vim-devicons'
+    Plug 'sainnhe/everforest'
+    Plug 'tpope/vim-sensible'
 call plug#end()
 
 " if in case of lazy loading
 function! s:AfterEnter(t) abort
-    echom "vim is ready"
+    echo "vim is ready"
     " block cursor in normal mode, i-beam cursor in insert mode, and underline cursor in replace mode
     if empty($TMUX)
         let &t_SI = "\<Esc>]50;CursorShape=1\x7"
@@ -286,22 +286,23 @@ set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
 
 " Mappings for CoCList
 " Show all diagnostics.
-" nnoremap <silent><nowait> <space>a  :<C-u>CocList diagnostics<cr>
+" nnoremap <silent><nowait> <space>a  :<C-u>CocFzfList diagnostics<cr>
 " Manage extensions.
-" nnoremap <silent><nowait> <space>e  :<C-u>CocList extensions<cr>
+" nnoremap <silent><nowait> <space>e  :<C-u>CocFzfList extensions<cr>
 " Show commands.
-" nnoremap <silent><nowait> <space>c  :<C-u>CocList commands<cr>
+nnoremap <silent><nowait> <leader>b  :Buffers<cr>
+nnoremap <silent><nowait> <leader>c  :Commands<cr>
 
 " Find symbol of current document.
-nnoremap <silent><nowait> <space>o  :<C-u>CocList outline<cr>
+nnoremap <silent><nowait> <space>o  :<C-u>CocFzfList outline<cr>
 " Search workspace symbols.
-" nnoremap <silent><nowait> <space>s  :<C-u>CocList -I symbols<cr>
+" nnoremap <silent><nowait> <space>s  :<C-u>CocFzfList -I symbols<cr>
 " Do default action for next item.
 nnoremap <silent><nowait> <space>j  :<C-u>CocNext<CR>
 " Do default action for previous item.
 nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
 " Resume latest coc list.
-nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
+nnoremap <silent><nowait> <space>p  :<C-u>CocFzfListResume<CR>
 
 
 
