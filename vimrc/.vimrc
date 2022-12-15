@@ -66,7 +66,6 @@ autocmd BufEnter * if bufname('#') =~ 'NERD_tree_\d\+' && bufname('%') !~ 'NERD_
 
 syntax on
 
-colorscheme habamax
 
 if v:progname =~? "evim"
     finish
@@ -92,6 +91,8 @@ let $FZF_DEFAULT_COMMAND='find . \( -name node_modules -o -name .git \) -prune -
 " plugins
 call plug#begin()
     Plug 'preservim/nerdtree', { 'on':  'NERDTreeToggle' }
+    Plug 'sainnhe/everforest'
+    Plug 'joshdick/onedark.vim'
     Plug 'neoclide/coc.nvim', {'branch': 'release'}
     Plug 'ryanoasis/vim-devicons'
     Plug 'tpope/vim-sensible'
@@ -114,13 +115,15 @@ function! s:AfterEnter(t) abort
         let &t_EI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=0\x7\<Esc>\\"
         let &t_SR = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=2\x7\<Esc>\\"
     endif
+
+    colorscheme everforest
 endfunction
 
 " My auto commands
 augroup vimrcEx
     au!
-    " For all text files set 'textwidth' to 78 characters.
-    autocmd FileType text setlocal textwidth=78
+    " For all text files set 'textwidth' to 80 characters.
+    autocmd FileType text setlocal textwidth=80
 augroup END
 
 augroup user_cmds
@@ -153,7 +156,6 @@ nnoremap - :NERDTreeFind<CR>
 nnoremap <leader>s :Ag<CR>
 nnoremap <leader>t <c-z> 
 nnoremap gp :silent %!prettier --stdin-filepath %<CR>
-
 "Maps end
 
 
