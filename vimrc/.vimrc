@@ -149,6 +149,7 @@ nnoremap - :NERDTreeFind<CR>
 nnoremap <leader>s :Ag<CR>
 nnoremap <leader>t <c-z> 
 nnoremap gp :silent %!prettier --stdin-filepath %<CR>
+nnoremap <nowait><space>- bveK
 "Maps end
 
 "yankHighitlighted stuff
@@ -228,7 +229,7 @@ nmap <leader>ac  <Plug>(coc-codeaction-cursor)
 " Remap keys for apply code actions affect whole buffer.
 nmap <leader>as  <Plug>(coc-codeaction-source)
 " Apply the most preferred quickfix action to fix diagnostic on the current line.
-nmap <leader>qf  <Plug>(coc-fix-current):highlight LineNr guifg=#050505
+nmap <leader>qf  <Plug>(coc-fix-current)
 
 " Remap keys for apply refactor code actions.
 nmap <silent> <leader>re <Plug>(coc-codeaction-refactor)
