@@ -143,7 +143,7 @@ inoremap [ []<Esc>ha
 inoremap ( ()<Esc>ha
 inoremap jk <esc>
 inoremap <esc> <nop>
-nnoremap <leader>f :Files<CR>
+nnoremap <leader>f :GFiles<CR>
 nnoremap <leader>e :NERDTreeToggle<CR>
 nnoremap - :NERDTreeFind<CR>
 nnoremap <leader>s :Ag<CR>
