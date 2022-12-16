@@ -63,9 +63,7 @@ autocmd BufEnter * if winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTa
 autocmd BufEnter * if bufname('#') =~ 'NERD_tree_\d\+' && bufname('%') !~ 'NERD_tree_\d\+' && winnr('$') > 1 |
     \ let buf=bufnr() | buffer# | execute "normal! \<C-W>w" | execute 'buffer'.buf | endif
 
-
 syntax on
-
 
 if v:progname =~? "evim"
     finish
@@ -91,6 +89,7 @@ let $FZF_DEFAULT_COMMAND='find . \( -name node_modules -o -name .git \) -prune -
 " plugins
 call plug#begin()
     Plug 'antoinemadec/coc-fzf'
+    Plug 'machakann/vim-highlightedyank'
     Plug 'joshdick/onedark.vim'
     Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
     Plug 'junegunn/fzf.vim'
@@ -134,12 +133,6 @@ augroup END
 " auto reload vimrc on save
 autocmd! BufWritePost $MYVIMRC source $MYVIMRC 
 
-
-" Start NERDTree when Vim starts with a directory argument.
-"autocmd StdinReadPre * let s:std_in=1
-"autocmd VimEnter * if argc() == 1 && isdirectory(argv()[0]) && !exists('s:std_in') |
-"            \ execute 'NERDTree' argv()[0] |  execute 'cd '.argv()[0] | endif
-
 "My auto commands end
 
 " Maps
@@ -158,6 +151,8 @@ nnoremap <leader>t <c-z>
 nnoremap gp :silent %!prettier --stdin-filepath %<CR>
 "Maps end
 
+"yankHighitlighted stuff
+let g:highlightedyank_highlight_duration = 300
 
 " Use tab for trigger completion with characters ahead and navigate.
 " NOTE: There's always complete item selected by default, you may want to enable
@@ -233,7 +228,7 @@ nmap <leader>ac  <Plug>(coc-codeaction-cursor)
 " Remap keys for apply code actions affect whole buffer.
 nmap <leader>as  <Plug>(coc-codeaction-source)
 " Apply the most preferred quickfix action to fix diagnostic on the current line.
-nmap <leader>qf  <Plug>(coc-fix-current)
+nmap <leader>qf  <Plug>(coc-fix-current):highlight LineNr guifg=#050505
 
 " Remap keys for apply refactor code actions.
 nmap <silent> <leader>re <Plug>(coc-codeaction-refactor)
@@ -274,15 +269,15 @@ xmap <silent> <C-s> <Plug>(coc-range-select)
 command! -nargs=0 Format :call CocActionAsync('format')
 
 " Add `:Fold` command to fold current buffer.
-command! -nargs=? Fold :call     CocAction('fold', <f-args>)
+"command! -nargs=? Fold :call     CocAction('fold', <f-args>)
 
 " Add `:OR` command for organize imports of the current buffer.
-command! -nargs=0 OR   :call     CocActionAsync('runCommand', 'editor.action.organizeImport')
+"command! -nargs=0 OR   :call     CocActionAsync('runCommand', 'editor.action.organizeImport')
 
 " Add (Neo)Vim's native statusline support.
 " NOTE: Please see `:h coc-status` for integrations with external plugins that
-" provide custom statusline: lightline.vim, vim-airline.
-set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
+" provide custom sta:highlight LineNr guifg=#050505tusline: lightline.vim, vim-airline.
+"set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
 
 " Mappings for CoCList
 " Show all diagnostics.
@@ -304,8 +299,7 @@ nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
 " Resume latest coc list.
 nnoremap <silent><nowait> <space>p  :<C-u>CocFzfListResume<CR>
 
-
-
+" syntax highlight for vim docs
 let g:markdown_fenced_languages = [
       \ 'vim',
       \ 'help'
