@@ -49,7 +49,7 @@ set smartcase
 set softtabstop=4
 set tabstop=4
 set termguicolors
-set textwidth=79
+set textwidth=80
 
 syntax on
 
@@ -148,10 +148,10 @@ autocmd! BufWritePost $MYVIMRC source $MYVIMRC
 "My auto commands end
 
 " Custom Mappings
-inoremap ( ()<Esc>ha
 inoremap <esc> <nop>
-inoremap [ []<Esc>ha
 inoremap jk <esc>
+inoremap ( ()<Esc>ha
+inoremap [ []<Esc>ha
 inoremap { {}<Esc>ha
 nnoremap - :NERDTreeFind<CR>
 nnoremap <leader>e :NERDTreeToggle<CR>
@@ -197,10 +197,9 @@ nmap <silent> ]g <Plug>(coc-diagnostic-next)
 
 " GoTo code navigation.
 nmap <silent> gd <Plug>(coc-definition)
-nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
-
+nmap <silent> gy <Plug>(coc-type-definition)
 " Use K to show documentation in preview window.
 nnoremap <silent> K :call ShowDocumentation()<CR>
 
@@ -294,7 +293,7 @@ command! -nargs=0 Format :call CocActionAsync('format')
 " Show commands.
 
 " Find symbol of current document.
-nnoremap <silent><nowait> <space>o  :<C-u>CocFzfList outline<cr>
+nnoremap <silent><nowait> <leader>co  :<C-u>CocFzfList outline<cr>
 " Search workspace symbols.
 " nnoremap <silent><nowait> <space>s  :<C-u>CocFzfList -I symbols<cr>
 " Do default action for next item.
