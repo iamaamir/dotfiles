@@ -2,6 +2,7 @@
 " which are not always needed so lets disable some of them
 " for the sake of a little better startup time
 
+let g:highlightedyank_highlight_duration = 300
 let g:loaded_2html_plugin = 1
 let g:loaded_getscript = 1
 let g:loaded_getscriptPlugin = 1
@@ -18,15 +19,31 @@ let g:loaded_vimball = 1
 let g:loaded_vimballPlugin = 1
 let g:loaded_zip = 1
 let g:loaded_zipPlugin = 1
+let g:startify_fortune_use_unicode = 0
+let g:startify_update_oldfiles = 0 
+let mapleader=' '
+
+let g:startify_lists = [
+    \ { 'type': 'sessions',  'header': ['   Sessions']       },
+    \ { 'type': 'files',     'header': ['   MRU']            },
+    \ { 'type': 'commands',  'header': ['   Commands']       },
+    \ { 'type': 'dir',       'header': ['   MRU '. getcwd()] },
+    \ { 'type': 'bookmarks', 'header': ['   Bookmarks']      },
+    \ ]
+
+
 
 " some fine tuning
 set autoindent
+set encoding=utf-8
 set cursorline
 set expandtab
 set hlsearch
 set ignorecase
 set mouse=a
+set nobackup
 set nocompatible
+set nowritebackup
 set number
 set relativenumber
 set shiftwidth=4
@@ -34,10 +51,10 @@ set showmatch
 set smartcase
 set softtabstop=4
 set tabstop=4
-set textwidth=79
 set termguicolors
-set nobackup
-set nowritebackup
+set textwidth=79
+
+syntax on
 
 " Having longer updatetime (default is 4000 ms = 4 s) leads to noticeable
 " delays and poor user experience.
@@ -63,8 +80,6 @@ autocmd BufEnter * if winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTa
 autocmd BufEnter * if bufname('#') =~ 'NERD_tree_\d\+' && bufname('%') !~ 'NERD_tree_\d\+' && winnr('$') > 1 |
     \ let buf=bufnr() | buffer# | execute "normal! \<C-W>w" | execute 'buffer'.buf | endif
 
-syntax on
-
 if v:progname =~? "evim"
     finish
 endif
@@ -83,23 +98,25 @@ if has('syntax') && has('eval')
     packadd! matchit
 endif
 
-" ignore these for fzf
+" FZF stuff 
 let $FZF_DEFAULT_COMMAND='find . \( -name node_modules -o -name .git \) -prune -o -print'
+let $FZF_DEFAULT_OPTS = '--reverse'
 
 " plugins
 call plug#begin()
     Plug 'antoinemadec/coc-fzf'
-    Plug 'machakann/vim-highlightedyank'
     Plug 'joshdick/onedark.vim'
     Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
     Plug 'junegunn/fzf.vim'
+    Plug 'machakann/vim-highlightedyank'
     Plug 'mhinz/vim-startify'
     Plug 'neoclide/coc.nvim', {'branch': 'release'}
     Plug 'preservim/nerdtree', { 'on':  'NERDTreeToggle' }
     Plug 'ryanoasis/vim-devicons'
     Plug 'sainnhe/everforest'
-    Plug 'tpope/vim-sensible'
 call plug#end()
+
+colorscheme everforest
 
 " if in case of lazy loading
 function! s:AfterEnter(t) abort
@@ -114,8 +131,6 @@ function! s:AfterEnter(t) abort
         let &t_EI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=0\x7\<Esc>\\"
         let &t_SR = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=2\x7\<Esc>\\"
     endif
-
-    colorscheme everforest
 endfunction
 
 " My auto commands
@@ -128,32 +143,31 @@ augroup END
 augroup user_cmds
     au!
     autocmd VimEnter * call timer_start(30, function('s:AfterEnter'))
+    autocmd VimLeavePre *             silent execute 'SSave!'
 augroup END
 
 " auto reload vimrc on save
 autocmd! BufWritePost $MYVIMRC source $MYVIMRC 
-
 "My auto commands end
 
 " Maps
-let mapleader=' '
 
 inoremap { {}<Esc>ha
 inoremap [ []<Esc>ha
 inoremap ( ()<Esc>ha
 inoremap jk <esc>
 inoremap <esc> <nop>
-nnoremap <leader>f :GFiles<CR>
+nnoremap <leader>ff :GFiles<CR>
+nnoremap <leader>fs :Ag<CR>
+nnoremap <silent><nowait> <leader>fb  :Buffers<cr>
+nnoremap <silent><nowait> <leader>fc  :Commands<cr>
+nnoremap <silent><nowait> <leader>fl  :Lines<cr>
 nnoremap <leader>e :NERDTreeToggle<CR>
 nnoremap - :NERDTreeFind<CR>
-nnoremap <leader>s :Ag<CR>
 nnoremap <leader>t <c-z> 
 nnoremap gp :silent %!prettier --stdin-filepath %<CR>
-nnoremap <nowait><space>- bveK
-"Maps end
-
-"yankHighitlighted stuff
-let g:highlightedyank_highlight_duration = 300
+nnoremap <nowait>H bveK
+" Maps end
 
 " Use tab for trigger completion with characters ahead and navigate.
 " NOTE: There's always complete item selected by default, you may want to enable
@@ -275,19 +289,12 @@ command! -nargs=0 Format :call CocActionAsync('format')
 " Add `:OR` command for organize imports of the current buffer.
 "command! -nargs=0 OR   :call     CocActionAsync('runCommand', 'editor.action.organizeImport')
 
-" Add (Neo)Vim's native statusline support.
-" NOTE: Please see `:h coc-status` for integrations with external plugins that
-" provide custom sta:highlight LineNr guifg=#050505tusline: lightline.vim, vim-airline.
-"set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
-
 " Mappings for CoCList
 " Show all diagnostics.
-" nnoremap <silent><nowait> <space>a  :<C-u>CocFzfList diagnostics<cr>
+ nnoremap <silent><nowait> <leader>cd  :<C-u>CocFzfList diagnostics<cr>
 " Manage extensions.
 " nnoremap <silent><nowait> <space>e  :<C-u>CocFzfList extensions<cr>
 " Show commands.
-nnoremap <silent><nowait> <leader>b  :Buffers<cr>
-nnoremap <silent><nowait> <leader>c  :Commands<cr>
 
 " Find symbol of current document.
 nnoremap <silent><nowait> <space>o  :<C-u>CocFzfList outline<cr>
