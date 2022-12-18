@@ -1,6 +1,5 @@
-" Vim comes with quite a few default plugins
-" which are not always needed so lets disable some of them
-" for the sake of a little better startup time
+" Vim comes with quite a few default plugins which are not always needed so
+" lets disable some of them for the sake of a little better startup time
 
 let g:highlightedyank_highlight_duration = 300
 let g:loaded_2html_plugin = 1
@@ -20,17 +19,15 @@ let g:loaded_vimballPlugin = 1
 let g:loaded_zip = 1
 let g:loaded_zipPlugin = 1
 let g:startify_fortune_use_unicode = 0
+let g:startify_session_persistence    = 1
 let g:startify_update_oldfiles = 0 
 let mapleader=' '
 
+" Simplify the startify list to just recent files and sessions
 let g:startify_lists = [
-    \ { 'type': 'sessions',  'header': ['   Sessions']       },
-    \ { 'type': 'files',     'header': ['   MRU']            },
-    \ { 'type': 'commands',  'header': ['   Commands']       },
-    \ { 'type': 'dir',       'header': ['   MRU '. getcwd()] },
-    \ { 'type': 'bookmarks', 'header': ['   Bookmarks']      },
-    \ ]
-
+  \ { 'type': 'sessions',  'header': ['   Projects'] },
+  \ { 'type': 'dir',       'header': ['   Recent files'] },
+  \ ]
 
 
 " some fine tuning
@@ -74,7 +71,8 @@ autocmd VimEnter * if argc() == 1 && isdirectory(argv()[0]) && !exists('s:std_in
     \ execute 'NERDTree' argv()[0] | wincmd p | enew | execute 'cd '.argv()[0] | endif
 
 " Close the tab if NERDTree is the only window remaining in it.
-autocmd BufEnter * if winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | quit | endif
+autocmd BufEnter * if winnr('$') == 1 && exists('b:NERDTree') &&
+            \b:NERDTree.isTabTree() | quit | endif
 
 " If another buffer tries to replace NERDTree, put it in the other window, and bring back NERDTree.
 autocmd BufEnter * if bufname('#') =~ 'NERD_tree_\d\+' && bufname('%') !~ 'NERD_tree_\d\+' && winnr('$') > 1 |
@@ -143,30 +141,29 @@ augroup END
 augroup user_cmds
     au!
     autocmd VimEnter * call timer_start(30, function('s:AfterEnter'))
-    autocmd VimLeavePre *             silent execute 'SSave!'
 augroup END
 
 " auto reload vimrc on save
 autocmd! BufWritePost $MYVIMRC source $MYVIMRC 
 "My auto commands end
 
-" Maps
-
-inoremap { {}<Esc>ha
-inoremap [ []<Esc>ha
+" Custom Mappings
 inoremap ( ()<Esc>ha
-inoremap jk <esc>
 inoremap <esc> <nop>
+inoremap [ []<Esc>ha
+inoremap jk <esc>
+inoremap { {}<Esc>ha
+nnoremap - :NERDTreeFind<CR>
+nnoremap <leader>e :NERDTreeToggle<CR>
 nnoremap <leader>ff :GFiles<CR>
 nnoremap <leader>fs :Ag<CR>
+nnoremap <leader>ll :SClose<CR>
+nnoremap <leader>t <c-z> 
+nnoremap <nowait>H bveK
 nnoremap <silent><nowait> <leader>fb  :Buffers<cr>
 nnoremap <silent><nowait> <leader>fc  :Commands<cr>
 nnoremap <silent><nowait> <leader>fl  :Lines<cr>
-nnoremap <leader>e :NERDTreeToggle<CR>
-nnoremap - :NERDTreeFind<CR>
-nnoremap <leader>t <c-z> 
 nnoremap gp :silent %!prettier --stdin-filepath %<CR>
-nnoremap <nowait>H bveK
 " Maps end
 
 " Use tab for trigger completion with characters ahead and navigate.
@@ -307,8 +304,5 @@ nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
 " Resume latest coc list.
 nnoremap <silent><nowait> <space>p  :<C-u>CocFzfListResume<CR>
 
-" syntax highlight for vim docs
-let g:markdown_fenced_languages = [
-      \ 'vim',
-      \ 'help'
-      \]
+" syntax highlight for vim doc
+let g:markdown_fenced_languages = ['vim', 'Help' ]
