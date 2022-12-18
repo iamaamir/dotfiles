@@ -144,3 +144,4 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 # # Import colorscheme from 'wal' asynchronously
 (cat ~/.cache/wal/sequences &)
 
+export BAT_THEME="gruvbox-dark"
