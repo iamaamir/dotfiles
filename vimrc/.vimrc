@@ -97,9 +97,9 @@ if has('syntax') && has('eval')
 endif
 
 " FZF stuff 
+" let $FZF_PREVIEW_COMMAND="bat --style=numbers --color=always {}"
 let $FZF_DEFAULT_COMMAND='find . \( -name node_modules -o -name .git \) -prune -o -print'
-let $FZF_DEFAULT_OPTS = '--reverse'
-
+let $FZF_DEFAULT_OPTS = '--layout=reverse  --preview-window up'
 " plugins
 call plug#begin()
     Plug 'antoinemadec/coc-fzf'
@@ -288,6 +288,7 @@ command! -nargs=0 Format :call CocActionAsync('format')
 " Mappings for CoCList
 " Show all diagnostics.
  nnoremap <silent><nowait> <leader>cd  :<C-u>CocFzfList diagnostics<cr>
+ nnoremap <silent><nowait> <leader>cm  :<C-u>CocFzfList marketplace<cr>
 " Manage extensions.
 " nnoremap <silent><nowait> <space>e  :<C-u>CocFzfList extensions<cr>
 " Show commands.
