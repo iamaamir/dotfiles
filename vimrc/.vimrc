@@ -153,9 +153,10 @@ inoremap jk <esc>
 inoremap ( ()<Esc>ha
 inoremap [ []<Esc>ha
 inoremap { {}<Esc>ha
-nnoremap - :NERDTreeFind<CR>
-nnoremap <leader>e :NERDTreeToggle<CR>
-nnoremap <leader>ff :GFiles<CR>
+nnoremap -          :NERDTreeFind<CR>
+nnoremap <leader>e  :NERDTreeToggle<CR>
+nnoremap <leader>fg :GFiles<CR>
+nnoremap <leader>ff :Files<CR>
 nnoremap <leader>fs :Ag<CR>
 nnoremap <leader>ll :SClose<CR>
 nnoremap <leader>t <c-z> 

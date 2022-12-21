@@ -1,3 +1,6 @@
+# vi: ft=bash
+
+
 alias reload="exec ${SHELL} -l"
 alias xls="exa -lh"
 alias cat="bat"
