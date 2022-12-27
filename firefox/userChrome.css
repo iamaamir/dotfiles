@@ -161,3 +161,38 @@ tab:not(:first-child) {
   border: unset !important;
   box-shadow: unset !important;
 }
+
+
+
+/* bring the browser window to the top */
+#browser {
+	-moz-box-ordinal-group: 0 !important;
+}
+
+/* adjust paddings */
+*|*:root[sizemode="normal"] #browser {
+	padding-top: 0 !important;
+}
+
+/* hide tab toolbar when fullscreen */
+#nav-bar[inFullscreen],
+#TabsToolbar[inFullscreen] {
+	display: none;
+}
+
+/* restore top border */
+/*TODO: find the proper color variable, it's not -moz-accent-color*/
+*|*:root[sizemode="normal"] #browser {
+	border-top: 1px solid #4d4d50 !important;
+}
+
+/* make toolbar border persist on fullscreen */
+*|*:root[sizemode="maximized"] #navigator-toolbox {
+  border-top: 1px solid -moz-accent-color !important;
+  border-bottom: 1px solid -moz-accent-color !important;
+}
+
+/* hide titlebar buttons */
+#TabsToolbar > .titlebar-buttonbox-container {
+	display: none !important;
+}
