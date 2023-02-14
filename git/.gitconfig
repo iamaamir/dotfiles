@@ -21,6 +21,8 @@
     wtf = diff --name-only --diff-filter=U
   # Cancel local commits in the branch: git fuck master
     fuck = "!f() { git reset --hard origin/$1; }; f"
+    # commit ranking
+    rank = !git shortlog -s -n --no-merges
   # on mac gitk does not comes with git
   # use brew install git git-gui
     ui = !git-gui &

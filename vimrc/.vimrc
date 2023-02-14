@@ -1,6 +1,5 @@
 " Vim comes with quite a few default plugins which are not always needed so
 " lets disable some of them for the sake of a little better startup time
-
 let g:highlightedyank_highlight_duration = 300
 let g:loaded_2html_plugin = 1
 let g:loaded_getscript = 1
@@ -32,8 +31,9 @@ let g:startify_lists = [
 
 " some fine tuning
 set autoindent
-set encoding=utf-8
+set bg=dark
 set cursorline
+set encoding=utf-8
 set expandtab
 set hlsearch
 set ignorecase
@@ -112,6 +112,7 @@ call plug#begin()
     Plug 'preservim/nerdtree', { 'on':  'NERDTreeToggle' }
     Plug 'ryanoasis/vim-devicons'
     Plug 'sainnhe/everforest'
+    Plug 'rust-lang/rust.vim'
 call plug#end()
 
 colorscheme everforest
@@ -160,6 +161,7 @@ nnoremap <leader>ff :Files<CR>
 nnoremap <leader>fs :Ag<CR>
 nnoremap <leader>ll :SClose<CR>
 nnoremap <leader>t <c-z> 
+nnoremap <leader>tt :terminal<CR>
 nnoremap <nowait>H bveK
 nnoremap <silent><nowait> <leader>fb  :Buffers<cr>
 nnoremap <silent><nowait> <leader>fc  :Commands<cr>

@@ -38,6 +38,7 @@ clone() {
   else
     cd $(basename "$1" .git)
   fi
+  nvm use
   if [[ -r "./yarn.lock" ]]; then
     yarn
   elif [[ -r "./package-lock.json" ]]; then

@@ -23,7 +23,7 @@ fi
 
 # echo "pre commit key ${TICKET_KEY}"
 TEMP=`mktemp /tmp/commitmsg-XXXXX`
-(echo "[$TICKET_KEY]: $(cat  $1)") > $TEMP
+(echo "$(cat  $1) [$TICKET_KEY]") > $TEMP
 cat $TEMP > $1
 
 
