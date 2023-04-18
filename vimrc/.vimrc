@@ -50,7 +50,6 @@ set softtabstop=4
 set tabstop=4
 set termguicolors
 set textwidth=80
-
 syntax on
 
 " Having longer updatetime (default is 4000 ms = 4 s) leads to noticeable
