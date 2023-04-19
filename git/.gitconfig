@@ -48,9 +48,9 @@
         git pull origin develop;\
         git checkout -b feature/$SQUAD-$1-$desc;\
         }; f"
-
-    ccb = "!git rev-parse --abbrev-ref HEAD | pbcopy"
-  # print working branch
+    # copy working branch
+    cwb = "!git rev-parse --abbrev-ref HEAD | pbcopy"
+    # print working branch
     pwb = "!git rev-parse --abbrev-ref HEAD"
     cb = "!git checkout `git branch | fzf| tr -d '[:space:]'` "
   # get rid of untracked files
