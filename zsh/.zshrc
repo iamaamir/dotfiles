@@ -92,6 +92,12 @@ plugins=(
 
 source $ZSH/oh-my-zsh.sh
 
+if [ -f ~/dotfiles/zsh/privatealiases.zsh ]; then
+    source ~/dotfiles/zsh/privatealiases.zsh
+else
+    print "404: ~/dotfiles/zsh/privatealiases.zsh not found."
+fi
+
 # User configuration
 if [ -f ~/dotfiles/zsh/.aliases ]; then
     source ~/dotfiles/zsh/.aliases
@@ -99,11 +105,6 @@ else
     print "404: ~/dotfiles/zsh/.aliases not found."
 fi
 
-if [ -f ~/dotfiles/zsh/privatealiases.zsh ]; then
-    source ~/dotfiles/zsh/privatealiases.zsh
-else
-    print "404: ~/dotfiles/zsh/privatealiases.zsh not found."
-fi
 
 # export MANPATH="/usr/local/man:$MANPATH"
 
@@ -146,3 +147,5 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 
 export BAT_THEME="gruvbox-dark"
 eval "$(fnm env --use-on-cd)"
+
+export PATH="/Users/aamirkhan/.lucy/bin:$PATH"

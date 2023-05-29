@@ -15,7 +15,7 @@ alias localip="ipconfig getifaddr en0"
 # mimic vim quit
 alias :q='exit'
 # edit zsh config
-alias ze='nano ~/.zshrc'
+alias ze='vim ~/.zshrc'
 #handy color map for shells
 alias colormap='for i in {0..255}; do print -Pn "%K{$i}  %k%F{$i}${(l:3::0:)i}%f " ${${(M)$((i%6)):#3}:+$'\n'}; done'
 # list repos and cd into the one
@@ -28,6 +28,8 @@ alias whoami="id -un"
 alias grep="grep -IE --exclude-dir=.git --exclude-dir=node_modules"
 alias ghbrowse="gh browse -b `git rev-parse --abbrev-ref HEAD`"
 
+alias issues="jira issue list -a $(jira me)"
+alias tasks='jira issue list -q "assignee IN (currentUser()) AND status IN (\"Open\",\"Reopened\",\"To Do\", \"In Progress\")"'
 # functions
 # git clone and cd to a repo directory and run npm/yarn
 clone() {

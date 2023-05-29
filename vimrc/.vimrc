@@ -101,6 +101,7 @@ let $FZF_DEFAULT_COMMAND='find . \( -name node_modules -o -name .git \) -prune -
 let $FZF_DEFAULT_OPTS = '--layout=reverse  --preview-window up'
 " plugins
 call plug#begin()
+    Plug 'prettier/vim-prettier', { 'do': 'yarn install --frozen-lockfile --production' }
     Plug 'antoinemadec/coc-fzf'
     Plug 'joshdick/onedark.vim'
     Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
