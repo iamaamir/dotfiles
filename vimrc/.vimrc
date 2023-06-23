@@ -21,6 +21,8 @@ let g:startify_fortune_use_unicode = 0
 let g:startify_session_persistence    = 1
 let g:startify_update_oldfiles = 0 
 let mapleader=' '
+" syntax highlight for vim doc
+let g:markdown_fenced_languages = ['vim', 'Help' ]
 
 " Simplify the startify list to just recent files and sessions
 let g:startify_lists = [
@@ -50,6 +52,7 @@ set softtabstop=4
 set tabstop=4
 set termguicolors
 set textwidth=80
+set is hls
 syntax on
 
 " Having longer updatetime (default is 4000 ms = 4 s) leads to noticeable
@@ -307,5 +310,7 @@ nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
 " Resume latest coc list.
 nnoremap <silent><nowait> <space>p  :<C-u>CocFzfListResume<CR>
 
-" syntax highlight for vim doc
-let g:markdown_fenced_languages = ['vim', 'Help' ]
+
+" list blames for the current file/buffer
+command! Blame normal!:let @a=expand('%')<CR>:let @b=line('.')<CR>:new<CR>:set bt=nofile<CR>:%!git blame -wM <C-R>a<CR>:<C-R>b<CR>
+

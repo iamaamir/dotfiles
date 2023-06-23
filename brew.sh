@@ -89,6 +89,10 @@ brew install stow
 brew install --cask flux
 brew install --cask raycast
 brew install --cask shottr
+brew install ripgrep
+brew install fzf
+# To install useful key bindings and fuzzy completion:
+$(brew --prefix)/opt/fzf/install
 # brew install gs
 # brew install imagemagick --with-webp
 # brew install lua
@@ -116,9 +120,10 @@ brew install bat #cat
 
 
 # coding font
-brew tap homebrew/cask-fonts
-brew install --cask font-fira-code
+brew tap homebrew/cask-fonts && brew install font-Fira-Code-nerd-font
 
+# fnm Node manager
+brew install fnm
 
 # Remove outdated versions from the cellar.
 brew cleanup
