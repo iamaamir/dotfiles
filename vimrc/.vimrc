@@ -161,7 +161,7 @@ nnoremap -          :NERDTreeFind<CR>
 nnoremap <leader>e  :NERDTreeToggle<CR>
 nnoremap <leader>fg :GFiles<CR>
 nnoremap <leader>ff :Files<CR>
-nnoremap <leader>fs :Ag<CR>
+nnoremap <leader>fs :Rg<CR>
 nnoremap <leader>ll :SClose<CR>
 nnoremap <leader>t <c-z> 
 nnoremap <leader>tt :terminal<CR>

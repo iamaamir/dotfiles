@@ -91,6 +91,8 @@ brew install --cask raycast
 brew install --cask shottr
 brew install ripgrep
 brew install fzf
+brew install git-delta
+
 # To install useful key bindings and fuzzy completion:
 $(brew --prefix)/opt/fzf/install
 # brew install gs
