@@ -16,7 +16,7 @@
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 #eval "$(pyenv init --path)"
 # Path to your oh-my-zsh installation.
-export ZSH="$HOME/.oh-my-zsh"
+#export ZSH="$HOME/.oh-my-zsh"
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
@@ -84,13 +84,8 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(
-    git
-    zsh-syntax-highlighting
-    #zsh-autosuggestions
-)
-
-source $ZSH/oh-my-zsh.sh
+plugins=()
+#source $ZSH/oh-my-zsh.sh
 
 if [ -f ~/dotfiles/zsh/privatealiases.zsh ]; then
     source ~/dotfiles/zsh/privatealiases.zsh
@@ -105,6 +100,11 @@ else
     print "404: ~/dotfiles/zsh/.aliases not found."
 fi
 
+if [ -f /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
+    source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+else
+    print "404: zsh-syntax-highlighting not found"
+fi
 
 # export MANPATH="/usr/local/man:$MANPATH"
 

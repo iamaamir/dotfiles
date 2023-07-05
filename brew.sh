@@ -92,6 +92,8 @@ brew install --cask shottr
 brew install ripgrep
 brew install fzf
 brew install git-delta
+brew install zsh-syntax-highlighting
+
 
 # To install useful key bindings and fuzzy completion:
 $(brew --prefix)/opt/fzf/install

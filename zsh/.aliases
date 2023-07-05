@@ -28,8 +28,8 @@ alias whoami="id -un"
 alias grep="grep -IE --exclude-dir=.git --exclude-dir=node_modules"
 alias ghbrowse="gh browse -b `git rev-parse --abbrev-ref HEAD`"
 
-alias issues="jira issue list -a $(jira me)"
-alias tasks='jira issue list -q "assignee IN (currentUser()) AND status IN (\"Open\",\"Reopened\",\"To Do\", \"In Progress\")"'
+#alias issues="jira issue list -a $(jira me)"
+#alias tasks='jira issue list -q "assignee IN (currentUser()) AND status IN (\"Open\",\"Reopened\",\"To Do\", \"In Progress\")"'
 # functions
 # git clone and cd to a repo directory and run npm/yarn
 clone() {
