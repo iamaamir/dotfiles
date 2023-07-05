@@ -21,8 +21,6 @@ brew install findutils
 # Install more recent versions of some macOS tools.
 brew install wget
 brew install grep
-brew install openssh
-brew install screen
 
 
 # add gnubin to path
