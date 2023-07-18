@@ -27,6 +27,10 @@ alias whoami="id -un"
 # a bit faster grep
 alias grep="grep -IE --exclude-dir=.git --exclude-dir=node_modules"
 alias ghbrowse="gh browse -b `git rev-parse --abbrev-ref HEAD`"
+alias gst="git status"
+alias gd="git diff"
+alias pr='gh pr create -a "@me" -l "IAM" -d'
+
 
 #alias issues="jira issue list -a $(jira me)"
 #alias tasks='jira issue list -q "assignee IN (currentUser()) AND status IN (\"Open\",\"Reopened\",\"To Do\", \"In Progress\")"'

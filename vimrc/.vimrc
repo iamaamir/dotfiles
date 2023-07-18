@@ -314,3 +314,32 @@ nnoremap <silent><nowait> <space>p  :<C-u>CocFzfListResume<CR>
 " list blames for the current file/buffer
 command! Blame normal!:let @a=expand('%')<CR>:let @b=line('.')<CR>:new<CR>:set bt=nofile<CR>:%!git blame -wM <C-R>a<CR>:<C-R>b<CR>
 
+"list the openend buffers and copy filepath to clipboard
+function! FzfBufferList()
+    " Get the list of buffer names
+  let buffer_list = []
+  for buffer_number in range(1, bufnr('$'))
+    if buflisted(buffer_number) && bufname(buffer_number) != '' && !isdirectory(bufname(buffer_number))
+      call add(buffer_list, bufname(buffer_number))
+    endif
+  endfor
+
+  " Create the fzf command and execute it in a blocking manner
+  let selected_buffer = fzf#run({
+        \ 'source': buffer_list,
+        \ 'header': 'Select a buffer:',
+        \ 'sink': function('CopyToClipboard')
+        \ })
+endfunction
+
+" Function to copy the selected path to the clipboard
+function! CopyToClipboard(selected_buffer)
+  if !empty(a:selected_buffer)
+    let @+ = a:selected_buffer
+    echo "Copied to clipboard: " . a:selected_buffer
+  endif
+endfunction
+
+" Create a custom command to trigger the buffer list
+command! -nargs=0 FzfBufferList :call FzfBufferList()
+
