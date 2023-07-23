@@ -344,3 +344,16 @@ endfunction
 " Create a custom command to trigger the buffer list
 command! -nargs=0 FzfBufferList :call FzfBufferList()
 
+
+
+
+function! RunSystemCmd()
+    let cmd = input('Enter system command: ')
+    if len(cmd) > 0
+        execute '!' . cmd
+        redraw
+    endif
+endfunction
+
+nnoremap <Leader>! :call RunSystemCmd()<CR>
+
