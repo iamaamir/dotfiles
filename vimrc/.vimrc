@@ -157,6 +157,7 @@ inoremap jk <esc>
 inoremap ( ()<Esc>ha
 inoremap [ []<Esc>ha
 inoremap { {}<Esc>ha
+nnoremap <leader>cp :let @+ = expand('%:p')<CR>:echo "path copied: " . @+<CR>
 nnoremap -          :NERDTreeFind<CR>
 nnoremap <leader>e  :NERDTreeToggle<CR>
 nnoremap <leader>fg :GFiles<CR>
