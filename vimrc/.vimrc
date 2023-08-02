@@ -158,6 +158,8 @@ inoremap <esc> <nop>
 inoremap [ []<Esc>ha
 inoremap ( ()<Esc>ha
 inoremap { {}<Esc>ha
+nnoremap <leader>cp :let @+ = expand('%:p')<CR>:echo "path copied: " . @+<CR>
+nnoremap <Leader>! :exe '!'.input('Enter system command: ')<CR>
 nnoremap -          :NERDTreeFind<CR>
 nnoremap <leader>! :exe '!'.input('Enter system command: ')<CR>
 nnoremap <leader>cp :let @+ = expand('%:p')<CR>:echo "path copied: " . @+<CR>
