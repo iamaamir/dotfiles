@@ -56,6 +56,7 @@
   # get rid of untracked files
   # git clean can also be used but its very weird 
     rid = "!git ls-files -o --exclude-standard | fzf -m | xargs -I {} rm {}"
+    put-back = "!git ls-files -om --exclude-standard | fzf -m | xargs -I {} git restore {}"
     adjust = "!git commit --amend --no-edit"
     overrule = "!git commit --amend --no-edit && git push --force-with-lease"
 

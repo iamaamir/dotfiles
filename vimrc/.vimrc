@@ -43,6 +43,7 @@ set mouse=a
 set nobackup
 set nocompatible
 set nowritebackup
+set noswapfile
 set number
 set relativenumber
 set shiftwidth=4
@@ -152,16 +153,17 @@ autocmd! BufWritePost $MYVIMRC source $MYVIMRC
 "My auto commands end
 
 " Custom Mappings
-inoremap <esc> <nop>
 inoremap jk <esc>
-inoremap ( ()<Esc>ha
+inoremap <esc> <nop>
 inoremap [ []<Esc>ha
+inoremap ( ()<Esc>ha
 inoremap { {}<Esc>ha
-nnoremap <leader>cp :let @+ = expand('%:p')<CR>:echo "path copied: " . @+<CR>
 nnoremap -          :NERDTreeFind<CR>
+nnoremap <leader>! :exe '!'.input('Enter system command: ')<CR>
+nnoremap <leader>cp :let @+ = expand('%:p')<CR>:echo "path copied: " . @+<CR>
 nnoremap <leader>e  :NERDTreeToggle<CR>
-nnoremap <leader>fg :GFiles<CR>
 nnoremap <leader>ff :Files<CR>
+nnoremap <leader>fg :GFiles<CR>
 nnoremap <leader>fs :Rg<CR>
 nnoremap <leader>ll :SClose<CR>
 nnoremap <leader>t <c-z> 
@@ -170,7 +172,7 @@ nnoremap <nowait>H bveK
 nnoremap <silent><nowait> <leader>fb  :Buffers<cr>
 nnoremap <silent><nowait> <leader>fc  :Commands<cr>
 nnoremap <silent><nowait> <leader>fl  :Lines<cr>
-nnoremap gp :silent %!prettier --stdin-filepath %<CR>
+nnoremap gp :silent %!npx prettier --stdin-filepath %<CR>
 " Maps end
 
 " Use tab for trigger completion with characters ahead and navigate.
@@ -312,6 +314,11 @@ nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
 nnoremap <silent><nowait> <space>p  :<C-u>CocFzfListResume<CR>
 
 
+
+
+
+" custom functions 
+
 " list blames for the current file/buffer
 command! Blame normal!:let @a=expand('%')<CR>:let @b=line('.')<CR>:new<CR>:set bt=nofile<CR>:%!git blame -wM <C-R>a<CR>:<C-R>b<CR>
 
@@ -343,17 +350,4 @@ endfunction
 
 " Create a custom command to trigger the buffer list
 command! -nargs=0 FzfBufferList :call FzfBufferList()
-
-
-
-
-function! RunSystemCmd()
-    let cmd = input('Enter system command: ')
-    if len(cmd) > 0
-        execute '!' . cmd
-        redraw
-    endif
-endfunction
-
-nnoremap <Leader>! :call RunSystemCmd()<CR>
 
