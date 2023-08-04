@@ -54,6 +54,7 @@ set tabstop=4
 set termguicolors
 set textwidth=80
 set is hls
+set matchpairs+=<:>
 syntax on
 
 " Having longer updatetime (default is 4000 ms = 4 s) leads to noticeable
