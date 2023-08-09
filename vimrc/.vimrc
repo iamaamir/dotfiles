@@ -142,6 +142,7 @@ augroup vimrcEx
     au!
     " For all text files set 'textwidth' to 80 characters.
     autocmd FileType text setlocal textwidth=80
+    au BufRead,BufNewFile *.hbs set filetype=html
 augroup END
 
 augroup user_cmds
@@ -154,13 +155,11 @@ autocmd! BufWritePost $MYVIMRC source $MYVIMRC
 "My auto commands end
 
 " Custom Mappings
-inoremap jk <esc>
+inoremap ( ()<Esc>ha
 inoremap <esc> <nop>
 inoremap [ []<Esc>ha
-inoremap ( ()<Esc>ha
+inoremap jk <esc>
 inoremap { {}<Esc>ha
-nnoremap <leader>cp :let @+ = expand('%:p')<CR>:echo "path copied: " . @+<CR>
-nnoremap <Leader>! :exe '!'.input('Enter system command: ')<CR>
 nnoremap -          :NERDTreeFind<CR>
 nnoremap <leader>! :exe '!'.input('Enter system command: ')<CR>
 nnoremap <leader>cp :let @+ = expand('%:p')<CR>:echo "path copied: " . @+<CR>
@@ -176,6 +175,7 @@ nnoremap <silent><nowait> <leader>fb  :Buffers<cr>
 nnoremap <silent><nowait> <leader>fc  :Commands<cr>
 nnoremap <silent><nowait> <leader>fl  :Lines<cr>
 nnoremap gp :silent %!npx prettier --stdin-filepath %<CR>
+nnoremap x "_x
 " Maps end
 
 " Use tab for trigger completion with characters ahead and navigate.
