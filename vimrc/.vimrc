@@ -118,6 +118,7 @@ call plug#begin()
     Plug 'ryanoasis/vim-devicons'
     Plug 'sainnhe/everforest'
     Plug 'rust-lang/rust.vim'
+    Plug 'tpope/vim-fugitive'
 call plug#end()
 
 colorscheme everforest
