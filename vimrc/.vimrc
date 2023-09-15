@@ -171,6 +171,7 @@ nnoremap <leader>fs :Rg<CR>
 nnoremap <leader>ll :SClose<CR>
 nnoremap <leader>t <c-z> 
 nnoremap <leader>tt :terminal<CR>
+nnoremap <leader>s :Rg <C-R>=expand('<cword>')<CR><CR>
 nnoremap <nowait>H bveK
 nnoremap <silent><nowait> <leader>fb  :Buffers<cr>
 nnoremap <silent><nowait> <leader>fc  :Commands<cr>
