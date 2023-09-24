@@ -21,6 +21,8 @@ let g:startify_fortune_use_unicode = 0
 let g:startify_session_persistence    = 1
 let g:startify_update_oldfiles = 0 
 let mapleader=' '
+let g:prettier#autoformat_config_present = 1
+let g:prettier#exec_cmd_async = 1
 " syntax highlight for vim doc
 let g:markdown_fenced_languages = ['vim', 'Help' ]
 
