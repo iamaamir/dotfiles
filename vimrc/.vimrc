@@ -180,6 +180,9 @@ nnoremap gp :silent %!npx prettier --stdin-filepath %<CR>
 nnoremap x "_x
 " Maps end
 
+" custom commands
+command! EslintFix !npx eslint % --fix
+
 " Use tab for trigger completion with characters ahead and navigate.
 " NOTE: There's always complete item selected by default, you may want to enable
 " no select by `"suggest.noselect": true` in your configuration file.
