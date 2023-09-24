@@ -154,11 +154,10 @@ augroup user_cmds
 augroup END
 
 " auto reload vimrc on save
-autocmd! BufWritePost $MYVIMRC source $MYVIMRC 
+autocmd! BufWritePost ~/dotfiles/vimrc/.vimrc source ~/dotfiles/vimrc/.vimrc 
 "My auto commands end
 
 " Custom Mappings
-inoremap ( ()<Esc>ha
 inoremap <esc> <nop>
 inoremap [ []<Esc>ha
 inoremap jk <esc>
