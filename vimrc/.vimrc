@@ -23,6 +23,7 @@ let g:startify_update_oldfiles = 0
 let mapleader=' '
 let g:prettier#autoformat_config_present = 1
 let g:prettier#exec_cmd_async = 1
+
 " syntax highlight for vim doc
 let g:markdown_fenced_languages = ['vim', 'Help' ]
 
@@ -41,22 +42,24 @@ set encoding=utf-8
 set expandtab
 set hlsearch
 set ignorecase
+set is hls
+set list
+set listchars=tab:▸\ ,trail:•,eol:,nbsp:␣,extends:→,precedes:←
+set matchpairs+=<:>
 set mouse=a
 set nobackup
 set nocompatible
-set nowritebackup
 set noswapfile
+set nowritebackup
 set number
 set relativenumber
-set shiftwidth=4
+set shiftwidth=2
 set showmatch
 set smartcase
-set softtabstop=4
-set tabstop=4
+set softtabstop=2
+set tabstop=2
 set termguicolors
 set textwidth=80
-set is hls
-set matchpairs+=<:>
 syntax on
 
 " Having longer updatetime (default is 4000 ms = 4 s) leads to noticeable
@@ -359,4 +362,3 @@ endfunction
 
 " Create a custom command to trigger the buffer list
 command! -nargs=0 FzfBufferList :call FzfBufferList()
-
