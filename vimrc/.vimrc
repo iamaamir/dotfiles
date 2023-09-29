@@ -43,7 +43,6 @@ set expandtab
 set hlsearch
 set ignorecase
 set is hls
-set list
 set listchars=tab:▸\ ,trail:•,eol:,nbsp:␣,extends:→,precedes:←
 set matchpairs+=<:>
 set mouse=a
@@ -116,7 +115,6 @@ call plug#begin()
     Plug 'joshdick/onedark.vim'
     Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
     Plug 'junegunn/fzf.vim'
-    Plug 'machakann/vim-highlightedyank'
     Plug 'mhinz/vim-startify'
     Plug 'neoclide/coc.nvim', {'branch': 'release'}
     Plug 'preservim/nerdtree', { 'on':  'NERDTreeToggle' }
