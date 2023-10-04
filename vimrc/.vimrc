@@ -110,7 +110,6 @@ let $FZF_DEFAULT_COMMAND='find . \( -name node_modules -o -name .git \) -prune -
 let $FZF_DEFAULT_OPTS = '--layout=reverse  --preview-window up'
 " plugins
 call plug#begin()
-    Plug 'prettier/vim-prettier', { 'do': 'yarn install --frozen-lockfile --production' }
     Plug 'antoinemadec/coc-fzf'
     Plug 'joshdick/onedark.vim'
     Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
@@ -118,9 +117,9 @@ call plug#begin()
     Plug 'mhinz/vim-startify'
     Plug 'neoclide/coc.nvim', {'branch': 'release'}
     Plug 'preservim/nerdtree', { 'on':  'NERDTreeToggle' }
+    Plug 'prettier/vim-prettier', { 'do': 'yarn install --frozen-lockfile --production' }
     Plug 'ryanoasis/vim-devicons'
     Plug 'sainnhe/everforest'
-    Plug 'rust-lang/rust.vim'
     Plug 'tpope/vim-fugitive'
 call plug#end()
 
