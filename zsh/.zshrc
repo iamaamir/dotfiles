@@ -86,25 +86,18 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 # Add wisely, as too many plugins slow down shell startup.
 plugins=()
 #source $ZSH/oh-my-zsh.sh
+source ~/dotfiles/zsh/functions/source_if_exists.zsh
 
-if [ -f ~/dotfiles/zsh/privatealiases.zsh ]; then
-    source ~/dotfiles/zsh/privatealiases.zsh
-else
-    print "404: ~/dotfiles/zsh/privatealiases.zsh not found."
-fi
+files_to_source=(
+    ~/dotfiles/zsh/privatealiases.zsh
+    ~/dotfiles/zsh/.aliases
+    /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 
+    ~/.fzf.zsh
+    /opt/homebrew/etc/profile.d/autojump.sh
+    ~/dotfiles/zsh/functions/gh.sh
+)
+source_if_exists "${files_to_source[@]}"
 
-# User configuration
-if [ -f ~/dotfiles/zsh/.aliases ]; then
-    source ~/dotfiles/zsh/.aliases
-else
-    print "404: ~/dotfiles/zsh/.aliases not found."
-fi
-
-if [ -f /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
-    source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-else
-    print "404: zsh-syntax-highlighting not found"
-fi
 
 # export MANPATH="/usr/local/man:$MANPATH"
 
@@ -139,9 +132,6 @@ fi
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 #[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-[ -f /opt/homebrew/etc/profile.d/autojump.sh ] && . /opt/homebrew/etc/profile.d/autojump.sh
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
