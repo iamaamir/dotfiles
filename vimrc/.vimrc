@@ -129,14 +129,23 @@ colorscheme everforest
 function! s:AfterEnter(t) abort
     echo "vim is ready"
     " block cursor in normal mode, i-beam cursor in insert mode, and underline cursor in replace mode
-    if empty($TMUX)
+    if exists('$ITERM_PROFILE')
+      if exists('$TMUX')
+        let &t_SI = "\<Esc>[3 q"
+        let &t_EI = "\<Esc>[0 q"
+      else
         let &t_SI = "\<Esc>]50;CursorShape=1\x7"
         let &t_EI = "\<Esc>]50;CursorShape=0\x7"
-        let &t_SR = "\<Esc>]50;CursorShape=2\x7"
-    else
-        let &t_SI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=1\x7\<Esc>\\"
-        let &t_EI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=0\x7\<Esc>\\"
-        let &t_SR = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=2\x7\<Esc>\\"
+      endif
+    end
+
+    "fix: Pasting text on Vim inside tmux breaks indentation
+    " https://vi.stackexchange.com/a/28284
+    if &term =~ "screen"                                                   
+      let &t_BE = "\e[?2004h"                                              
+      let &t_BD = "\e[?2004l"                                              
+      exec "set t_PS=\e[200~"                                              
+      exec "set t_PE=\e[201~"                                              
     endif
 endfunction
 
@@ -356,6 +365,35 @@ function! CopyToClipboard(selected_buffer)
     echo "Copied to clipboard: " . a:selected_buffer
   endif
 endfunction
-
 " Create a custom command to trigger the buffer list
 command! -nargs=0 FzfBufferList :call FzfBufferList()
+" Mapping for creating a new file with custom path
+nnoremap <leader>n :call CreateNewFile()<CR>
+
+function! CreateNewFile()
+    if expand('%') == ''
+        echo "No file is open. Please open a file to create a new one."
+        return
+    endif
+
+    let currentPath = expand('%:h')
+    let prompt = "Enter the file path (including filename): "
+    let userPath = input(prompt, currentPath)
+
+    " Convert the user's input to an absolute path
+    let filePath = fnamemodify(userPath, ':p')
+
+    " Get the directory part of the file path
+    let directory = fnamemodify(filePath, ':h')
+
+    " Create missing directories in the path
+    call mkdir(directory, 'p')
+
+    if filereadable(filePath)
+        echo "File already exists!"
+    else
+        call writefile([''], filePath)
+        echo "File created: " . filePath
+    endif
+endfunction
+
