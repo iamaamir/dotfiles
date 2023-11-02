@@ -139,3 +139,26 @@ gopen(){
   open $(git config remote.origin.url | sed "s/git@\(.*\):\(.*\).git/https:\/\/\1\/\2/")/$1$2
 }
 
+
+
+share() {
+  echo "🚀 Uploading to sprunge"
+  
+  # Check if input is piped
+  if [ -p /dev/stdin ]; then
+    url=$(curl -F 'sprunge=<-' http://sprunge.us < /dev/stdin 2> /dev/null | tr -d '\n')
+  elif [ -f "$1" ]; then
+    url=$(curl -F 'sprunge=<-' http://sprunge.us < "$1" 2> /dev/null | tr -d '\n')
+  else
+    echo "❌ Error: Invalid input. \n use: share <file> or <cmd> | share"
+    return 1
+  fi
+
+  if [ $? -eq 0 ]; then
+    echo "✅ Upload successful."
+    echo $url | tr -d '\n' | pbcopy
+    echo "📋 Copied link to clipboard: ${url}"
+  else
+    echo "❌ Error: Upload failed."
+  fi
+}
