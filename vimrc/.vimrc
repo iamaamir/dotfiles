@@ -178,6 +178,7 @@ nnoremap <silent><nowait> <leader>fb  :Buffers<cr>
 nnoremap <silent><nowait> <leader>fc  :Commands<cr>
 nnoremap <silent><nowait> <leader>fl  :Lines<cr>
 nnoremap gp :silent %!npx prettier --stdin-filepath %<CR>
+nnoremap <C-w>z :wincmd _ \| wincmd \|<CR>
 nnoremap x "_x
 " Maps end
 
