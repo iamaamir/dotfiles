@@ -51,6 +51,7 @@ set nocompatible
 set noswapfile
 set nowritebackup
 set number
+set path+=**
 set relativenumber
 set shiftwidth=2
 set showmatch
@@ -221,6 +222,8 @@ nmap <silent> gr <Plug>(coc-references)
 nmap <silent> gy <Plug>(coc-type-definition)
 " Use K to show documentation in preview window.
 nnoremap <silent> K :call ShowDocumentation()<CR>
+" makr noiw  set
+
 
 function! ShowDocumentation()
     if CocAction('hasProvider', 'hover')
