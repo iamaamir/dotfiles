@@ -60,6 +60,7 @@ set softtabstop=2
 set tabstop=2
 set termguicolors
 set textwidth=80
+set wildmenu
 syntax on
 
 " Having longer updatetime (default is 4000 ms = 4 s) leads to noticeable
