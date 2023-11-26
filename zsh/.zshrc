@@ -1,5 +1,4 @@
 ZSH_THEME="eastwood"
-DISABLE_UNTRACKED_FILES_DIRTY="true"
 source ~/dotfiles/zsh/functions/source_if_exists.zsh
 
 files_to_source=(
