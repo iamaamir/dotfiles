@@ -60,6 +60,7 @@ set softtabstop=2
 set tabstop=2
 set termguicolors
 set textwidth=80
+set wildignore+=*/node_modules/**
 set wildmenu
 syntax on
 
