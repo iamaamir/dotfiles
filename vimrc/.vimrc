@@ -35,6 +35,7 @@ let g:startify_lists = [
 
 
 " some fine tuning
+
 set autoindent
 set bg=dark
 set cursorline
@@ -186,7 +187,9 @@ nnoremap x "_x
 " Maps end
 
 " custom commands
+command! Blame normal!:let @a=expand('%')<CR>:let @b=line('.')<CR>:new<CR>:set bt=nofile<CR>:%!git blame -wM <C-R>a<CR>:<C-R>b<CR>
 command! EslintFix !npx eslint % --fix
+command! Gwc :Gw | G commit
 
 " Use tab for trigger completion with characters ahead and navigate.
 " NOTE: There's always complete item selected by default, you may want to enable
@@ -334,8 +337,6 @@ nnoremap <silent><nowait> <space>p  :<C-u>CocFzfListResume<CR>
 
 " custom functions 
 
-" list blames for the current file/buffer
-command! Blame normal!:let @a=expand('%')<CR>:let @b=line('.')<CR>:new<CR>:set bt=nofile<CR>:%!git blame -wM <C-R>a<CR>:<C-R>b<CR>
 
 "list the openend buffers and copy filepath to clipboard
 function! FzfBufferList()
