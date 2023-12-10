@@ -162,29 +162,31 @@ autocmd! BufWritePost ~/dotfiles/vimrc/.vimrc source ~/dotfiles/vimrc/.vimrc
 "My auto commands end
 
 " Custom Mappings
+" Maps end
 inoremap <esc> <nop>
 inoremap [ []<Esc>ha
 inoremap jk <esc>
 inoremap { {}<Esc>ha
 nnoremap -          :NERDTreeFind<CR>
+nnoremap <C-w>z :wincmd _ \| wincmd \|<CR>
 nnoremap <leader>! :exe '!'.input('Enter system command: ')<CR>
+nnoremap <leader>Q !!$SHELL<cr> 
 nnoremap <leader>cp :let @+ = expand('%:p')<CR>:echo "path copied: " . @+<CR>
 nnoremap <leader>e  :NERDTreeToggle<CR>
 nnoremap <leader>ff :Files<CR>
 nnoremap <leader>fg :GFiles<CR>
 nnoremap <leader>fs :Rg<CR>
 nnoremap <leader>ll :SClose<CR>
+nnoremap <leader>s :Rg <C-R>=expand('<cword>')<CR><CR>
 nnoremap <leader>t <c-z> 
 nnoremap <leader>tt :terminal<CR>
-nnoremap <leader>s :Rg <C-R>=expand('<cword>')<CR><CR>
 nnoremap <nowait>H bveK
-nnoremap <silent><nowait> <leader>fb  :Buffers<cr>
-nnoremap <silent><nowait> <leader>fc  :Commands<cr>
-nnoremap <silent><nowait> <leader>fl  :Lines<cr>
+nnoremap <silent><nowait> <leader>fb  :Buffers<CR>
+nnoremap <silent><nowait> <leader>fc  :Commands<CR>
+nnoremap <silent><nowait> <leader>fl  :Lines<CR>
+nnoremap Q :close<CR>
 nnoremap gp :silent %!npx prettier --stdin-filepath %<CR>
-nnoremap <C-w>z :wincmd _ \| wincmd \|<CR>
 nnoremap x "_x
-" Maps end
 
 " custom commands
 command! Blame normal!:let @a=expand('%')<CR>:let @b=line('.')<CR>:new<CR>:set bt=nofile<CR>:%!git blame -wM <C-R>a<CR>:<C-R>b<CR>
@@ -317,13 +319,13 @@ command! -nargs=0 Format :call CocActionAsync('format')
  nnoremap <silent><nowait> <leader>cd  :<C-u>CocFzfList diagnostics<cr>
  nnoremap <silent><nowait> <leader>cm  :<C-u>CocFzfList marketplace<cr>
 " Manage extensions.
-" nnoremap <silent><nowait> <space>e  :<C-u>CocFzfList extensions<cr>
+" nnoremap <silent><nowait> <space>e  :<C-u>CocFzfList extensions<CR>
 " Show commands.
 
 " Find symbol of current document.
-nnoremap <silent><nowait> <leader>co  :<C-u>CocFzfList outline<cr>
+nnoremap <silent><nowait> <leader>co  :<C-u>CocFzfList outline<CR>
 " Search workspace symbols.
-" nnoremap <silent><nowait> <space>s  :<C-u>CocFzfList -I symbols<cr>
+" nnoremap <silent><nowait> <space>s  :<C-u>CocFzfList -I symbols<CR>
 " Do default action for next item.
 nnoremap <silent><nowait> <space>j  :<C-u>CocNext<CR>
 " Do default action for previous item.
@@ -332,11 +334,7 @@ nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
 nnoremap <silent><nowait> <space>p  :<C-u>CocFzfListResume<CR>
 
 
-
-
-
 " custom functions 
-
 
 "list the openend buffers and copy filepath to clipboard
 function! FzfBufferList()
