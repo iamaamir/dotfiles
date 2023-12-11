@@ -185,6 +185,7 @@ nnoremap <silent><nowait> <leader>fb  :Buffers<CR>
 nnoremap <silent><nowait> <leader>fc  :Commands<CR>
 nnoremap <silent><nowait> <leader>fl  :Lines<CR>
 nnoremap Q :close<CR>
+nnoremap W :Gwc<CR>
 nnoremap gp :silent %!npx prettier --stdin-filepath %<CR>
 nnoremap x "_x
 
