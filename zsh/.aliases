@@ -27,6 +27,7 @@ alias whoami="id -un"
 # a bit faster grep
 alias grep="grep -IE --exclude-dir=.git --exclude-dir=node_modules"
 alias ghbrowse="gh browse -b `git rev-parse --abbrev-ref HEAD`"
+alias viewpr="gh pr view --web"
 alias gst="git status"
 alias gd="git diff"
 alias gl='git log --format="%C(auto)%H%C(reset)%n%C(auto)%x1B[94m󰻞 %C(reset)%s%n%C(auto)%x1B[94m %C(bold green)Commit by:%C(reset) %C(bold green)%an%C(reset) %C(dim green)%ar%C(reset)%n%C(auto)%x1B[94m %C(bold magenta)Branch:%C(reset) %C(bold magenta)%d%C(reset)%n%C(auto)%x1B[94m ----------------------------------------%C(reset)%n"
