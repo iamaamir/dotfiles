@@ -1,5 +1,6 @@
 " Vim comes with quite a few default plugins which are not always needed so
 " lets disable some of them for the sake of a little better startup time
+let g:context_highlight_tag = '<hide>'
 let g:highlightedyank_highlight_duration = 300
 let g:loaded_2html_plugin = 1
 let g:loaded_getscript = 1
@@ -17,12 +18,12 @@ let g:loaded_vimball = 1
 let g:loaded_vimballPlugin = 1
 let g:loaded_zip = 1
 let g:loaded_zipPlugin = 1
+let g:prettier#autoformat_config_present = 1
+let g:prettier#exec_cmd_async = 1
 let g:startify_fortune_use_unicode = 0
 let g:startify_session_persistence    = 1
 let g:startify_update_oldfiles = 0 
 let mapleader=' '
-let g:prettier#autoformat_config_present = 1
-let g:prettier#exec_cmd_async = 1
 
 " syntax highlight for vim doc
 let g:markdown_fenced_languages = ['vim', 'Help' ]
@@ -125,6 +126,7 @@ call plug#begin()
     Plug 'ryanoasis/vim-devicons'
     Plug 'sainnhe/everforest'
     Plug 'tpope/vim-fugitive'
+    Plug 'wellle/context.vim'
 call plug#end()
 
 colorscheme everforest
