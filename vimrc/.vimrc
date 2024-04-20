@@ -36,7 +36,7 @@ let g:startify_lists = [
 
 
 " some fine tuning
-
+set pastetoggle=<F1>
 set autoindent
 set bg=dark
 set cursorline
@@ -190,6 +190,7 @@ nnoremap Q :close<CR>
 nnoremap W :Gwc<CR>
 nnoremap gp :silent %!npx prettier --stdin-filepath %<CR>
 nnoremap x "_x
+" nnoremap , @:
 
 " custom commands
 command! Blame normal!:let @a=expand('%')<CR>:let @b=line('.')<CR>:new<CR>:set bt=nofile<CR>:%!git blame -wM <C-R>a<CR>:<C-R>b<CR>
