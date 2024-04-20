@@ -59,9 +59,9 @@
     rid = "!git ls-files -o --exclude-standard | fzf -m | xargs -I {} rm {}"
     put-back = "!git ls-files -om --exclude-standard | fzf -m | xargs -I {} git restore {}"
     adjust = "!git commit --amend --no-edit"
-    overrule = "!git commit --amend --no-edit && git push --force-with-lease"
+    overrule = "!git commit --amend --no-edit --no-verify && git push --force-with-lease"
     squash = "!f(){ git reset --soft HEAD~${1} && git commit --edit -m\"$(git log --format=%B --reverse HEAD..HEAD@{1})\" --no-verify; };f"
-    merg = merge  -X patience -X ignore-all-space
+    merg = merge  -X patience -X ignore-all-space --squash
 
 [push]
   # When pushing code, always push only your current branch to a branch of the same name
