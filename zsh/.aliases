@@ -2,11 +2,11 @@
 
 
 alias reload="exec ${SHELL} -l"
-alias xls="exa -lh"
+alias xls="eza -lh"
 alias cat="bat"
-alias ls="exa"
+alias ls="eza"
 alias mirror='wget -mpEk'
-alias tree="exa -T -L=2 --icons --git-ignore -Fa"
+alias tree="eza -T -L=2 --icons --git-ignore -a"
 alias rmf="rm -rf"
 # Get macOS Software Updates, and update installed Ruby gems, Homebrew and their installed packages
 #ips
