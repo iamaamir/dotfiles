@@ -68,6 +68,10 @@
   # When pushing code, always push only your current branch to a branch of the same name
     default = current
 
+[rebase]
+  autoSquash = true
+  autoStash = true
+
 [fetch]
   # Automatically prune deleted branches from your local copy when you fetch (or pull)
     prune = true
