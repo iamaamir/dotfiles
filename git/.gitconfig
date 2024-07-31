@@ -69,9 +69,6 @@
   # When pushing code, always push only your current branch to a branch of the same name
     default = current
 
-[rebase]
-  autoSquash = true
-  autoStash = true
 
 [fetch]
   # Automatically prune deleted branches from your local copy when you fetch (or pull)
@@ -145,3 +142,9 @@
     hunk-header-line-number-style = "#067a00"
     hunk-header-style = file line-number syntax
 
+[pull]
+    rebase = true
+
+[rebase]
+    autoStash = true
+    autoSquash = true
