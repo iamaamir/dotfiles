@@ -117,7 +117,7 @@ brew install yarn
 
 
 # some better drop in replacements
-brew install exa #ls
+brew install eza
 brew install bat #cat
 
 
