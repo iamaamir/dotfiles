@@ -122,7 +122,7 @@ brew install bat #cat
 
 
 # coding font
-brew tap homebrew/cask-fonts && brew install font-Fira-Code-nerd-font
+brew install font-Fira-Code-nerd-font
 
 # fnm Node manager
 brew install fnm
