@@ -113,6 +113,7 @@ $(brew --prefix)/opt/fzf/install
 # dev installs
 brew install jq
 brew install yarn
+brew install neovim
 
 
 
