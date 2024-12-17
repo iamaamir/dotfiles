@@ -54,7 +54,7 @@
     cwb = "!git rev-parse --abbrev-ref HEAD | pbcopy"
     # print working branch
     pwb = "!git rev-parse --abbrev-ref HEAD"
-    cb = "!git switch `git branch | fzf| tr -d '[:space:]'` "
+    cb = "!git switch `git branch | fzf| tr -d '[:space:]'` && git pull"
   # get rid of untracked files
   # git clean can also be used but its very weird 
     rid = "!git ls-files -o --exclude-standard | fzf -m | xargs -I {} rm {}"
