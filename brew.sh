@@ -114,6 +114,9 @@ $(brew --prefix)/opt/fzf/install
 brew install jq
 brew install yarn
 brew install neovim
+brew install gh
+brew install starship
+brew install fd
 
 
 
