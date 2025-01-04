@@ -117,6 +117,7 @@ brew install neovim
 brew install gh
 brew install starship
 brew install fd
+brew install tmux
 
 
 
