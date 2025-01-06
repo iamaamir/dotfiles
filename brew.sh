@@ -118,6 +118,7 @@ brew install gh
 brew install starship
 brew install fd
 brew install tmux
+brew install pyenv
 
 
 
