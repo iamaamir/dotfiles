@@ -91,6 +91,7 @@ brew install ripgrep
 brew install fzf
 brew install git-delta
 brew install zsh-syntax-highlighting
+brew install zsh-autosuggestions
 
 
 # To install useful key bindings and fuzzy completion:
