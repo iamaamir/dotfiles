@@ -5,6 +5,7 @@ alias reload="exec ${SHELL} -l"
 alias xls="eza -lh"
 alias cat="bat"
 alias ls="eza"
+alias cls="clear"
 alias mirror='wget -mpEk'
 alias tree="eza -T -L=2 --icons --git-ignore -a"
 alias rmf="rm -rf"
