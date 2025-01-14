@@ -1,0 +1,3 @@
+co: pr checkout
+flows: workflow view
+pco: '!id="$(gh pr list -L100 | fzf | cut -f1)"; [ -n "$id" ] && gh pr checkout "$id"'
