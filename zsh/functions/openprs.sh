@@ -24,7 +24,7 @@ showprs() {
     log "PR limit: $pr_limit"
 
     # List all PRs from the specified user and allow the user to select one
-    selected_pr=$(gh search prs --author "$github_user" --limit "$pr_limit" --json number,title,url,repository --jq '.[] | [.repository.nameWithOwner, .number, .title, .url] | @tsv' | fzf --delimiter='\t' --with-nth=1,3)
+    selected_pr=$(gh search prs --author "$github_user" --state "open" --limit "$pr_limit" --json number,title,url,repository --jq '.[] | [.repository.nameWithOwner, .number, .title, .url] | @tsv' | fzf --delimiter='\t' --with-nth=1,3)
 
     # Check if any PR was selected
     if [ -z "$selected_pr" ]; then
