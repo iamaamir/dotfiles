@@ -111,8 +111,21 @@ function switch_workspace {
         NOTES_DIR="$BASE_NOTES_DIR/$CURRENT_WORKSPACE"
         save_current_workspace
         echo "Switched to workspace '$CURRENT_WORKSPACE'."
+        # early exit
+        return
     else
         echo "No workspace selected."
+    fi
+    echo "Enter new workspace name"
+    read -p "New workspace name: " new_workspace
+    if [ -n "$new_workspace" ]; then
+        mkdir -p "$BASE_NOTES_DIR/$new_workspace"
+        echo "Created new workspace '$new_workspace'."
+        CURRENT_WORKSPACE="$new_workspace"
+        NOTES_DIR="$BASE_NOTES_DIR/$CURRENT_WORKSPACE"
+        save_current_workspace
+    else
+        echo "No new workspace name provided."
     fi
 }
 
@@ -153,7 +166,18 @@ function edit_note {
 function new_note {
     display_current_workspace
     read -p "Enter note title: " title
-    ${EDITOR:-nvim} "$NOTES_DIR/$title.md"
+    # Replace spaces with underscores, convert to lowercase, and remove special characters
+    title=$(echo "$title" | tr ' ' '_' | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]_')
+    if [ -z "$title" ]; then
+        echo "No title provided."
+        return
+    fi
+    note_path="$NOTES_DIR/$title.md"
+    if [ -e "$note_path" ]; then
+        echo "Note with this title already exists."
+        return
+    fi
+    ${EDITOR:-nvim} "$note_path"
 }
 
 # Search notes by content
@@ -182,6 +206,14 @@ function search_notes_tags {
     else
         echo "No tag selected."
     fi
+}
+
+function display_current_workspace {
+    if [ -z "$CURRENT_WORKSPACE" ]; then
+        echo "No workspace selected. Use 'note sw' to select a workspace."
+        exit 1
+    fi
+    echo "Current workspace: '$CURRENT_WORKSPACE'"
 }
 
 # Show help
@@ -215,6 +247,9 @@ case "$1" in
         ;;
     sw)
         switch_workspace
+        ;;
+    cw)
+        display_current_workspace
         ;;
     ls)
         list_notes
