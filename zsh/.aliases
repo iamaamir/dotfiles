@@ -164,3 +164,8 @@ share() {
     echo "❌ Error: Upload failed."
   fi
 }
+
+# print to terminal and copy the output of a command to clipboard
+copyrun(){
+  script -q /dev/null "$@" | tee >(pbcopy)
+}

@@ -1,6 +1,15 @@
 ZSH_THEME="eastwood"
 ZVM_VI_ESCAPE_BINDKEY=jk
 ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
+autoload -Uz compinit && compinit
+
+# WezTerm Shell Integration
+if [[ -n "$WEZTERM_PANE" ]]; then
+  [[ -f "$WEZTERM_EXECUTABLE_DIR/../Resources/wezterm.sh" ]] && \
+    source "$WEZTERM_EXECUTABLE_DIR/../Resources/wezterm.sh"
+fi
+
+export EDITOR="/opt/homebrew/bin/nvim"
 
 source ~/dotfiles/zsh/functions/source_if_exists.zsh
 
