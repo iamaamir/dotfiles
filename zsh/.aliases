@@ -1,6 +1,8 @@
 # vi: ft=bash
 
 
+alias v="vim"
+alias n="nvim"
 alias reload="exec ${SHELL} -l"
 alias xls="eza -lh"
 alias cat="bat"
