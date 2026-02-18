@@ -35,6 +35,7 @@ alias gst="git status"
 alias gd="git diff"
 alias gl='git log --format="%C(auto)%H%C(reset)%n%C(auto)%x1B[94m󰻞 %C(reset)%s%n%C(auto)%x1B[94m %C(bold green)Commit by:%C(reset) %C(bold green)%an%C(reset) %C(dim green)%ar%C(reset)%n%C(auto)%x1B[94m %C(bold magenta)Branch:%C(reset) %C(bold magenta)%d%C(reset)%n%C(auto)%x1B[94m ----------------------------------------%C(reset)%n"
 '
+
 #alias pr='gh pr create -a "@me" -l "IAM" -d'
 
 #alias issues="jira issue list -a $(jira me)"
@@ -170,4 +171,11 @@ share() {
 # print to terminal and copy the output of a command to clipboard
 copyrun(){
   script -q /dev/null "$@" | tee >(pbcopy)
+}
+
+# create a commit with a message of the hex representation of the input string, default to "amir"
+# assuming luck_commit is already installed, if not run brew install lucky-commit
+magic_commit() {
+  local s="${1:-amir}"
+  lucky_commit "$(printf %s "$s" | xxd -p)"
 }

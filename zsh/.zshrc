@@ -43,3 +43,8 @@ eval "$(gh copilot alias -- zsh)"
 # uninstall by removing these lines
 [[ -f ~/.config/tabtab/__tabtab.zsh ]] && . ~/.config/tabtab/__tabtab.zsh || true
 [[ $commands[kubectl] ]] && source <(kubectl completion zsh) # add autocomplete permanently to your zsh shell
+
+chpwd() {
+  echo "Now in: $PWD"
+  ls
+}
