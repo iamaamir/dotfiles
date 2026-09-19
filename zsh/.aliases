@@ -11,7 +11,8 @@ alias cls="clear"
 alias mirror='wget -mpEk'
 alias tree="eza -T -L=2 --icons --git-ignore -a"
 alias rmf="rm -rf"
-alias rmfall="find . -name . -o -prune -exec rm -rf -- {} +"
+# NOTE: no rmfall alias on purpose — `find . -prune -exec rm -rf` deletes
+# everything including .git with no confirmation. Use rmf explicitly.
 # Get macOS Software Updates, and update installed Ruby gems, Homebrew and their installed packages
 #ips
 alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
@@ -247,8 +248,11 @@ vite:new() {
 
   if $init_git && ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     local git_reply
-    read "git_reply?Initialize Git repository? [Y/n] "
-    if [[ "$git_reply" != [nN]* ]]; then
+    if [[ -t 0 ]]; then
+      read "git_reply?Initialize Git repository? [y/N] "
+    fi
+    # Opt-in: empty (EOF, Enter) means no. Only an explicit y/Y inits.
+    if [[ "$git_reply" == [yY]* ]]; then
       [[ -e .gitignore ]] || touch .gitignore
       git init
     fi
