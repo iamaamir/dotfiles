@@ -5,9 +5,9 @@
 
 set -euo pipefail
 
-# Configuration
+# Configuration (ASK_CONFIG overrides the config file location for tests)
 CONFIG_DIR="${HOME}/.config/ask"
-CONFIG_FILE="${CONFIG_DIR}/config"
+CONFIG_FILE="${ASK_CONFIG:-${CONFIG_DIR}/config}"
 OLLAMA_HOST="${OLLAMA_HOST:-http://localhost:11434}"
 TEMPERATURE="0.1"
 
@@ -204,9 +204,10 @@ If the command is complex, break it down into simpler, verified parts."
 
     # Build user prompt - include feedback and previous command in the actual prompt
     local user_prompt="$query"
-    # Use exported FEEDBACK from regeneration or local feedback parameter
-    fb="${FEEDBACK:-${feedback:-}}"
-    prev_cmd="${PREV_COMMAND:-}"
+    # Single channel: exported FEEDBACK/PREV_COMMAND (set by retry loop) win
+    # over the passed-in feedback parameter. Declared local so nothing leaks.
+    local fb="${FEEDBACK:-${feedback:-}}"
+    local prev_cmd="${PREV_COMMAND:-}"
     if [ -n "$fb" ]; then
         user_prompt="${user_prompt}
 
@@ -237,10 +238,6 @@ CONTEXT: Running on ${SHELL_NAME} on ${OS_TYPE} ${OS_VERSION}"
     
     # Verbose output
     if [ "${VERBOSE:-false}" = "true" ]; then
-        fb="${FEEDBACK:-${feedback:-}}"
-        prev_cmd="${PREV_COMMAND:-}"
-        local fb
-        local prev_cmd
         printf "${CYAN}═══════════════════════════════════════${NC}\n" >&2
         printf "${CYAN}  VERBOSE MODE - Attempt #%d${NC}\n" "$attempt" >&2
         printf "${CYAN}═══════════════════════════════════════${NC}\n" >&2
@@ -536,6 +533,43 @@ check_dependencies() {
     fi
 }
 
+# Ensure a named model exists locally, pulling it on demand.
+# Pure transport check: GET /api/tags, pull when absent. No globals mutated.
+ensure_model_available() {
+    local wanted="$1"
+    local model_response
+    model_response=$(curl -s --max-time 10 "${OLLAMA_HOST}/api/tags" 2>/dev/null)
+
+    if [ -n "$model_response" ] && echo "$model_response" | jq -e . >/dev/null 2>&1; then
+        local model_exists
+        model_exists=$(echo "$model_response" | jq -r --arg m "$wanted" '.models[] | select(.name == $m) | .name' 2>/dev/null || echo "")
+
+        if [ -z "$model_exists" ]; then
+            echo -e "${YELLOW}Model ${wanted} not found. Pulling model...${NC}" >&2
+            pull_model "$wanted" || true
+        fi
+    fi
+}
+
+# Resolve which model to use. Precedence: $MODEL (from --model flag or
+# CC_MODEL env) > saved config (already loaded into $MODEL) > interactive
+# selection. Prints the model name; caller assigns MODEL=$(resolve_model).
+resolve_model() {
+    local is_verbose="${1:-false}"
+    if [ -n "${MODEL:-}" ]; then
+        ensure_model_available "$MODEL"
+        echo "$MODEL"
+        return 0
+    fi
+    if [ "$is_verbose" = true ]; then
+        echo -e "${BLUE}No model specified. Selecting from available models...${NC}" >&2
+    fi
+    local picked
+    picked=$(select_model)
+    echo -e "${GREEN}Selected model: $picked${NC}" >&2
+    echo "$picked"
+}
+
 # Main function
 main() {
     local verbose=false
@@ -572,10 +606,12 @@ main() {
                 ;;
             --dry-run)
                 DRY_RUN=true
+                export DRY_RUN
                 shift
                 ;;
             --explain)
                 EXPLAIN=true
+                export EXPLAIN
                 shift
                 ;;
             --)
@@ -597,10 +633,12 @@ main() {
                     case $1 in
                         --dry-run)
                             DRY_RUN=true
+                            export DRY_RUN
                             shift
                             ;;
                         --explain)
                             EXPLAIN=true
+                            export EXPLAIN
                             shift
                             ;;
                         -*)
@@ -632,28 +670,8 @@ main() {
     check_dependencies
     check_ollama
     
-    # Select model if not specified
-    if [ -z "$MODEL" ]; then
-        if [ "$verbose" = true ]; then
-            echo -e "${BLUE}No model specified. Selecting from available models...${NC}" >&2
-        fi
-        MODEL=$(select_model)
-        echo -e "${GREEN}Selected model: $MODEL${NC}" >&2
-    else
-        # Check if specified model exists
-        local model_response
-        model_response=$(curl -s --max-time 10 "${OLLAMA_HOST}/api/tags" 2>/dev/null)
-        
-        if [ -n "$model_response" ] && echo "$model_response" | jq -e . >/dev/null 2>&1; then
-            local model_exists
-            model_exists=$(echo "$model_response" | jq -r ".models[] | select(.name == \"${MODEL}\") | .name" 2>/dev/null || echo "")
-            
-            if [ -z "$model_exists" ]; then
-                echo -e "${YELLOW}Model ${MODEL} not found. Pulling model...${NC}" >&2
-                pull_model "${MODEL}" || true
-            fi
-        fi
-    fi
+    # Select model if not specified (single precedence chain in resolve_model)
+    MODEL=$(resolve_model "$verbose")
     
     if [ "$verbose" = true ]; then
         echo -e "${BLUE}Query:${NC} $query" >&2
