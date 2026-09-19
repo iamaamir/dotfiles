@@ -1,0 +1,11 @@
+icons = true
+git = true
+group-directories-first = true
+header = true
+smart-group = true
+time-style = "relative"
+
+[view]
+grid = true
+long = false
+tree = false
