@@ -89,7 +89,7 @@ case "${1-}" in
 esac
 
 # ── HOOK ENTRYPOINT: prepare-commit-msg ──────────────────────────────────────
-MSG_FILE=$1
+MSG_FILE=${1:?hook error: missing commit message file}
 SOURCE=${2:-}
 
 info "🏃‍♂️  gptcommit hook running…"
@@ -145,15 +145,18 @@ debug "Diff (truncated):\n${DIFF:0:200}…"
 
 # ── Enhanced Fallback if no additions ───────────────────────────────────────
 if ! grep -q '^+[^+]' <<<"$DIFF"; then
-  # build deletion & rename options
-  mapfile -t FALLBACKS < <( \
+  # build deletion & rename options (portable: no mapfile — macOS bash is 3.2)
+  FALLBACKS=()
+  while IFS= read -r line; do
+    FALLBACKS+=("$line")
+  done < <(
     # deletions
     grep '^-[^-]' <<<"$DIFF" | sed 's/^-//' | awk -F/ '{print "fix: remove "$NF}' \
-    && { \
-      old=$(grep '^rename from ' <<<"$DIFF" | head -1 | cut -d' ' -f3) \
-      new=$(grep '^rename to '   <<<"$DIFF" | head -1 | cut -d' ' -f3) \
-      [[ -n $old && -n $new ]] && echo "refactor: rename ${old##*/} → ${new##*/}" ; \
-    } \
+    && {
+      old=$(grep '^rename from ' <<<"$DIFF" | head -1 | cut -d' ' -f3)
+      new=$(grep '^rename to '   <<<"$DIFF" | head -1 | cut -d' ' -f3)
+      [[ -n $old && -n $new ]] && echo "refactor: rename ${old##*/} → ${new##*/}" ;
+    }
   )
 
   if ((${#FALLBACKS[@]})); then
@@ -216,12 +219,15 @@ debug "System prompt: $SYSTEM_PROMPT"
 MAX_TRIES=3
 LAST_MSG=""
 
+# Per-run temp file, created once per hook invocation (fixed /tmp/gpt.json
+# raced parallel commits). BSD mktemp requires trailing Xs, hence no suffix.
+# EXIT trap so set -e aborts never leak /tmp files.
+GPT_TMP_JSON=$(mktemp /tmp/gptcommit.XXXXXX)
+trap 'rm -f "$GPT_TMP_JSON"' EXIT
+
 generate() {
   info "🤖  Generating AI draft…"
-  local prompt payload response code attempt wait
-  # Per-run temp file (fixed /tmp/gpt.json raced parallel commits)
-  local tmp_json
-  tmp_json=$(mktemp /tmp/gptcommit-XXXXXX.json)
+  local prompt payload response code attempt wait http
   prompt="Generate a Conventional Commit message"
   [[ -n $SCOPE ]] && prompt+=" for scope '$SCOPE'"
   prompt+=":\n\`\`\`diff
@@ -237,13 +243,16 @@ $DIFF
     '{model:$m,temperature:$t,messages:[{role:"system",content:$sys},{role:"user",content:$usr}]}')
 
   for attempt in $(seq 1 $MAX_TRIES); do
-    http=$(curl -sS -w "%{http_code}" -o "$tmp_json" \
+    # `|| true`: curl failure must not trip set -e; the code guard below
+    # treats unparseable output as a non-retryable break with fallback text.
+    http=$(curl -sS -w "%{http_code}" -o "$GPT_TMP_JSON" \
       -H "Authorization: Bearer $OPENAI_API_KEY" \
       -H "Content-Type: application/json" \
       -d "$payload" \
-      https://api.openai.com/v1/chat/completions)
-    code=${http: -3}
-    response=$(< "$tmp_json")
+      https://api.openai.com/v1/chat/completions || true)
+    code=$(printf '%s' "$http" | tail -c 3)
+    [[ "$code" =~ ^[0-9]{3}$ ]] || code=000
+    response=$(< "$GPT_TMP_JSON")
     if (( code == 200 )); then
       break
     elif (( code == 429 || code >= 500 )); then
@@ -256,7 +265,6 @@ $DIFF
   done
 
   jq -r '.choices[0].message.content // empty' <<<"$response"
-  rm -f "$tmp_json"
 }
 
 # ── Generate & clean up ──────────────────────────────────────────────────────
@@ -265,6 +273,14 @@ COMMIT_MSG=$(sed '/^[[:space:]]*$/d' <<<"$COMMIT_MSG")
 [[ -z $COMMIT_MSG ]] && COMMIT_MSG="chore: update $STAGED_COUNT files"
 
 # ── Interactive accept/regenerate/skip ─────────────────────────────────────
+# No controlling terminal (GUI clients, IDEs): never block on /dev/tty —
+# the redirect would fail under set -e and abort the commit. Keep the
+# generated message and let the commit proceed.
+if [ ! -r /dev/tty ] || [ ! -w /dev/tty ]; then
+  info "No TTY detected; keeping generated message without prompting."
+  printf '%s\n' "$COMMIT_MSG" > "$MSG_FILE"
+  exit 0
+fi
 TTY=/dev/tty; tries=0
 while true; do
   printf '[AI] Proposed commit message:\n---\n%s\n---\n' "$COMMIT_MSG" >"$TTY"
