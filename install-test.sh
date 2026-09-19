@@ -64,6 +64,16 @@ t "install.sh full sandbox run links + verifies" bash -c '
   d="$0/ifull"; mkdir -p "$d" &&
   HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" >/dev/null 2>&1 &&
   HOME="$d" "$1/link.sh" --verify >/dev/null 2>&1' "$SANDBOX" "$REPO_ROOT"
+t "stub recreated from example when missing" bash -c '
+  p="$1/zsh/privatealiases.zsh"; rc=0; had=0
+  if [ -f "$p" ]; then had=1; mv "$p" "$p.testsave"; fi
+  d="$0/istub"; mkdir -p "$d"
+  HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" >/dev/null 2>&1 || rc=1
+  cmp -s "$p" "$1/zsh/privatealiases.zsh.example" || rc=1
+  rm -f "$p"
+  if [ "$had" = 1 ]; then mv "$p.testsave" "$p"; fi
+  exit "$rc"' "$SANDBOX" "$REPO_ROOT"
+t "stow no longer installed by brew.sh" bash -c '! grep -qx "brew install stow" "$1/brew.sh"' "$SANDBOX" "$REPO_ROOT"
 
 echo "PASS=$PASS FAIL=$FAIL"
 [ "$FAIL" -eq 0 ]
