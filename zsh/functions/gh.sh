@@ -1,4 +1,5 @@
 #!/bin/bash
+# Sourced into zsh via .zshrc (gh PR helpers). Keep syntax POSIX/zsh-compatible.
 
 # ANSI color codes
 GREEN="\e[32m"
@@ -33,7 +34,7 @@ pr() {
 
   # Ask for confirmation
   echo -e "${YELLOW}${BOLD}🚀 Create this PR as a draft? (y/n)${RESET}"
-  read confirmation
+  read -r confirmation
 
   if [[ "$confirmation" =~ ^[Yy]$ ]]; then
     # Run the 'gh pr create' command to create the PR with the "draft" state
