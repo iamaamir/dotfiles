@@ -1,5 +1,13 @@
 # ~/.zsh/prompt.zsh
-# This file contains custom Zsh prompt logic for dynamic emoji switching.
+# Opt-in alternative prompt (cat emoji status). NOT sourced by default —
+# starship is the chosen prompt (see .config/starship.toml).
+# To try it: ENABLE_CAT_PROMPT=true source ~/dotfiles/zsh/prompt.zsh
+# (this shadows the starship PROMPT for the current shell only).
+if [[ -z "${ENABLE_CAT_PROMPT:-}" ]]; then
+  return 0 2>/dev/null || exit 0
+fi
+
+autoload -Uz add-zsh-hook vcs_info 2>/dev/null || true
 
 # --- Global Variables ---
 # These variables store information needed across different prompt functions.
@@ -61,16 +69,16 @@ precmd_set_status_emoji() {
 }
 
 # --- Hook Registration ---
-# Ensure 'autoload -Uz add-zsh-hook' is run *before* these calls.
-# We'll put add-zsh-hook in .zshrc, then add these specific functions to the hooks.
+# add-zsh-hook is autoloaded above; vcs_info for the Git segment.
+zstyle ':vcs_info:git:*' formats ' %b'
+autoload -Uz add-zsh-hook 2>/dev/null || true
 
 # Add our custom functions to Zsh's hook chains.
 add-zsh-hook preexec preexec_capture_command
 add-zsh-hook preexec preexec_sudo_indicator
 add-zsh-hook precmd precmd_set_status_emoji
-# Note: precmd_vcs_info (for Git status) is already added in your main .zshrc.
-# It's important that precmd_set_status_emoji runs *after* any command has completed
-# and its exit status is known, which it naturally does in the precmd chain.
+# Note: vcs_info segment is set up above via zstyle; precmd_set_status_emoji
+# runs in the precmd chain after vcs_info so exit status handling stays local.
 
 # --- Final Prompt Definition ---
 # This defines how your prompt will look.
