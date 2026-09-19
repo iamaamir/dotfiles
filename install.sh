@@ -20,14 +20,36 @@ case "${1:-}" in
 esac
 [ "$#" -le 1 ] || { usage >&2; exit 2; }
 
+# submodules must be initialized: a manual (non-recursive) clone would
+# otherwise link an empty .config/nvim that verifies OK but is degraded.
+# Checked before anything mutates, so the failure message names the fix.
+if [ "$DRY_RUN" = 0 ] && command -v git >/dev/null 2>&1 && git -C "$SCRIPT_DIR" rev-parse --git-dir >/dev/null 2>&1; then
+  uninit="$(git -C "$SCRIPT_DIR" submodule status 2>/dev/null | grep -E '^-' || true)"
+  if [ -n "$uninit" ]; then
+    echo "UNINITIALIZED SUBMODULES in $SCRIPT_DIR:" >&2
+    printf '%s\n' "$uninit" >&2
+    echo "run: git -C $SCRIPT_DIR submodule update --init --recursive — then re-run ./install.sh" >&2
+    exit 1
+  fi
+fi
+
 if [ -z "$SANDBOX" ] && [ "$DRY_RUN" = 0 ] && [ "$VERIFY_ONLY" = 0 ]; then
   #install brew (skip when already installed: re-running pays the full
   # installer on every clone refresh and aborts under set -euo on hiccups)
   if ! command -v brew >/dev/null 2>&1; then
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || {
+    brew_out="$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || {
+      echo "BREW DOWNLOAD FAILED (network?) — fix and re-run ./install.sh (idempotent)" >&2
+      exit 1
+    }
+    [ -n "$brew_out" ] || {
+      echo "BREW DOWNLOAD FAILED (empty response) — fix and re-run ./install.sh (idempotent)" >&2
+      exit 1
+    }
+    /bin/bash -c "$brew_out" || {
       echo "BREW INSTALL FAILED — fix and re-run ./install.sh (idempotent)" >&2
       exit 1
     }
+    unset brew_out
   fi
 
   #install brew packages (repo-root independent)
@@ -55,7 +77,8 @@ fi
 
 if [ "$VERIFY_ONLY" = 0 ]; then
   # symlinks from the manifest (backup-then-link); ~/git only after the
-  # links succeed so a link abort leaves no partial mutation behind
+  # links succeed so a link abort leaves no ~/git behind (earlier manifest
+  # links may already stand; re-run is idempotent)
   "$SCRIPT_DIR/link.sh" || {
     echo "LINK FAILED — fix links.txt or the paths above, then re-run ./install.sh" >&2
     echo "backups (if any) are under ~/.dotfiles-backup/<stamp>/; ./link.sh --verify to confirm" >&2

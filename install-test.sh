@@ -124,6 +124,14 @@ t "link follows symlink parent inside HOME" bash -c '
   HOME="$d" "$1/link.sh" >/dev/null 2>&1 &&
   [ -L "$d/realcfg/starship.toml" ] &&
   HOME="$d" "$1/link.sh" --verify >/dev/null 2>&1' "$SANDBOX" "$REPO_ROOT"
+t "link refuses transitive escape through chained symlinks" bash -c '
+  d="$0/twohop"; mkdir -p "$d" "$0/twohop-outside" &&
+  ln -s "$0/twohop-outside" "$d/real" &&
+  ln -s "$d/real" "$d/.config" &&
+  out=$(HOME="$d" "$1/link.sh" 2>&1); rc=$?
+  [ "$rc" -ne 0 ] && printf "%s" "$out" | grep -q "REFUSE" &&
+  [ -z "$(ls -A "$0/twohop-outside")" ] &&
+  [ ! -e "$d/.config/starship.toml" ]' "$SANDBOX" "$REPO_ROOT"
 t "double-slash HOME still links and verifies" bash -c '
   d="$0//dblslash"; mkdir -p "$d" &&
   HOME="$d" "$1/link.sh" >/dev/null 2>&1 &&
@@ -296,6 +304,19 @@ t "one run uses a single backup dir" bash -c '
   echo a > "$d/.zshrc" && echo b > "$d/.config/starship.toml" &&
   HOME="$d" "$1/link.sh" >/dev/null 2>&1 &&
   [ "$(find "$d/.dotfiles-backup" -mindepth 1 -maxdepth 1 -type d | wc -l)" -eq 1 ]' "$SANDBOX" "$REPO_ROOT"
+t "second full run adds no backup dir" bash -c '
+  d="$0/itwice"; mkdir -p "$d/.config"; ln -sfn "$1" "$d/dotfiles" &&
+  echo a > "$d/.zshrc" && echo b > "$d/.config/starship.toml" &&
+  HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" >/dev/null 2>&1 &&
+  HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" >/dev/null 2>&1 &&
+  [ "$(find "$d/.dotfiles-backup" -mindepth 1 -maxdepth 1 -type d | wc -l)" -eq 1 ]' "$SANDBOX" "$REPO_ROOT"
+t "install fails on uninitialized submodule" bash -c '
+  mod="$1/.config/nvim"
+  restore() { mv "$mod.hide" "$mod"; }; trap restore EXIT INT TERM
+  d="$0/nosub"; mkdir -p "$d"; ln -sfn "$1" "$d/dotfiles" &&
+  mv "$mod" "$mod.hide" &&
+  out=$(HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" 2>&1); rc=$?
+  [ "$rc" -ne 0 ] && printf "%s" "$out" | grep -q "UNINITIALIZED"' "$SANDBOX" "$REPO_ROOT"
 t "install.sh verify-only checks without mutating" bash -c '
   p="$1/zsh/privatealiases.zsh"; had=0
   restore() { rm -f "$p"; if [ "$had" = 1 ]; then mv "$p.testsave" "$p"; fi; }

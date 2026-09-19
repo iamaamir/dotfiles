@@ -63,7 +63,7 @@ under_home() { # under_home <abs-path>: 0 iff path equals $HN or starts
 no_escape() { # no_escape <abs-path>: 0 iff no strict parent dir of path
               # (from $HOME down) is a symlink escaping $HOME. Symlinks
               # pointing inside $HOME are followed (lived-in Macs).
-  local target="$1" parent rel cur comp tgt norm
+  local target="$1" parent rel cur comp tgt norm n
   under_home "$target" || { echo "REFUSE $target (outside HOME)" >&2; return 1; }
   parent="$(dirname "$target")"
   [ "$parent" = "$HN" ] && return 0
@@ -72,7 +72,12 @@ no_escape() { # no_escape <abs-path>: 0 iff no strict parent dir of path
   local IFS='/'
   for comp in $rel; do
     cur="$cur/$comp"
-    if [ -L "$cur" ]; then
+    n=0
+    while [ -L "$cur" ]; do
+      n=$((n + 1))
+      if [ "$n" -gt 40 ]; then
+        echo "REFUSE $target (symlink loop at $cur)" >&2; return 1
+      fi
       tgt="$(readlink "$cur")"
       case "$tgt" in
         /*) norm="$(normalize "$tgt")" ;;
@@ -81,7 +86,7 @@ no_escape() { # no_escape <abs-path>: 0 iff no strict parent dir of path
       if under_home "$norm"; then cur="$norm"; else
         echo "REFUSE $target (symlink parent $cur escapes HOME)" >&2; return 1
       fi
-    fi
+    done
   done
   return 0
 }
