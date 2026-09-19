@@ -11,6 +11,7 @@ alias cls="clear"
 alias mirror='wget -mpEk'
 alias tree="eza -T -L=2 --icons --git-ignore -a"
 alias rmf="rm -rf"
+alias rmfall="find . -name . -o -prune -exec rm -rf -- {} +"
 # Get macOS Software Updates, and update installed Ruby gems, Homebrew and their installed packages
 #ips
 alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
@@ -178,4 +179,87 @@ copyrun(){
 magic_commit() {
   local s="${1:-amir}"
   lucky_commit "$(printf %s "$s" | xxd -p)"
+}
+
+# Personal tools
+alias ask="~/dotfiles/zsh/functions/ask.sh"
+alias notes="~/dotfiles/notes.sh"
+vite:new() {
+  if (( $# < 1 )) || [[ "$1" == -* ]]; then
+    echo "Usage: vite:new <project-name> [--pm npm|pnpm|yarn|bun] [--open] [--no-git] [vite-options...]" >&2
+    return 2
+  fi
+
+  local project_name="$1"
+  local pm="npm"
+  local open_editor=false
+  local init_git=true
+  local -a vite_options=()
+  shift
+
+  while (( $# )); do
+    case "$1" in
+      --pm)
+        if (( $# < 2 )); then
+          echo "vite:new: --pm requires npm, pnpm, yarn, or bun" >&2
+          return 2
+        fi
+        pm="$2"
+        shift 2
+        ;;
+      --open)
+        open_editor=true
+        shift
+        ;;
+      --no-git)
+        init_git=false
+        shift
+        ;;
+      *)
+        vite_options+=("$1")
+        shift
+        ;;
+    esac
+  done
+
+  if [[ "$pm" != (npm|pnpm|yarn|bun) ]]; then
+    echo "vite:new: unsupported package manager: $pm" >&2
+    return 2
+  fi
+  if [[ -e "$project_name" ]]; then
+    echo "vite:new: destination already exists: $project_name" >&2
+    return 1
+  fi
+  if ! command -v "$pm" >/dev/null; then
+    echo "vite:new: command not found: $pm" >&2
+    return 127
+  fi
+
+  case "$pm" in
+    npm)  npm create vite@latest "$project_name" -- "${vite_options[@]}" ;;
+    pnpm) pnpm create vite "$project_name" "${vite_options[@]}" ;;
+    yarn) yarn create vite "$project_name" "${vite_options[@]}" ;;
+    bun)  bun create vite "$project_name" "${vite_options[@]}" ;;
+  esac || return
+
+  cd "$project_name" || return
+  "$pm" install || return
+
+  if $init_git && ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    local git_reply
+    read "git_reply?Initialize Git repository? [Y/n] "
+    if [[ "$git_reply" != [nN]* ]]; then
+      [[ -e .gitignore ]] || touch .gitignore
+      git init
+    fi
+  fi
+
+  if $open_editor; then
+    local editor="${VISUAL:-$EDITOR}"
+    if [[ -z "$editor" ]]; then
+      echo "vite:new: --open requires VISUAL or EDITOR" >&2
+      return 1
+    fi
+    $=editor .
+  fi
 }
