@@ -1,29 +1,29 @@
 #!/bin/sh
 # author: iamaamir
-# automatically prepending an issue key from branch name to commit messages.
-
+# Legacy opt-in hook: prepend an issue key from the branch name.
+# DEPRECATED in favor of git/gptcommit.sh, which owns the canonical ticket
+# rule ([A-Z]{2,}-[0-9]+). Kept for manual use only; do not install both.
 
 # this is opt in hook and disabled by default
 # to enable it add export ENABLE_TICKET_MSG=true in your bashrc/zshrc
-if [ -z $ENABLE_TICKET_MSG ] || [ $ENABLE_TICKET_MSG = false ]; then
-  exit
+if [ -z "${ENABLE_TICKET_MSG:-}" ] || [ "$ENABLE_TICKET_MSG" = false ]; then
+  exit 0
 fi
 
 
 # check if commit is merge commit or a commit ammend
-if [ $2 = "merge" ] || [ $2 = "commit" ]; then
-    exit
+if [ "${2:-}" = "merge" ] || [ "${2:-}" = "commit" ]; then
+    exit 0
 fi
 
-TICKET_KEY=`git branch | grep -o "\* \(.*/\)*[A-Z]\{2,\}-[0-9]\+" | grep -o "[A-Z]\{2,\}-[0-9]\+"`
+TICKET_KEY=$(git branch | grep -o "\* \(.*/\)*[A-Z]\{2,\}-[0-9]\+" | grep -o "[A-Z]\{2,\}-[0-9]\+")
 # skip with original msg if no key found in branch name
 if [ $? -ne 0 ]; then
-    exit
+    exit 0
 fi
 
 # echo "pre commit key ${TICKET_KEY}"
-TEMP=`mktemp /tmp/commitmsg-XXXXX`
-(echo "$(cat  $1) [$TICKET_KEY]") > $TEMP
-cat $TEMP > $1
-
-
+TEMP=$(mktemp /tmp/commitmsg-XXXXX)
+trap 'rm -f "$TEMP"' EXIT INT TERM
+(echo "$(cat "$1") [$TICKET_KEY]") > "$TEMP"
+cat "$TEMP" > "$1"
