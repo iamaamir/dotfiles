@@ -1,32 +1,45 @@
 #!/usr/bin/env bash
 # Stow-free linker. Reads links.txt, symlinks repo files into $HOME.
 # Backup-then-link; converged re-runs are no-ops. Pure bash, zero deps.
-# Only a single flag is supported (--dry-run or --verify, never combined).
+# Single flag only: --dry-run prints the plan, --verify reports
+# OK/MISSING/BROKEN. --help prints usage.
 # MANIFEST may be overridden via LINKS_MANIFEST (used by the test suite for
 # negative cases); it defaults to links.txt next to this script.
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MANIFEST="${LINKS_MANIFEST:-$REPO_ROOT/links.txt}"
 
-usage() { echo "usage: link.sh [--dry-run|--verify]" >&2; }
+usage() { echo "usage: link.sh [--dry-run|--verify|--help]"; }
 
 MODE="link"
 case "${1:-}" in
   "") ;;
   --dry-run) MODE="dry-run" ;;
   --verify) MODE="verify" ;;
-  *) usage; exit 2 ;;
+  --help|-h) usage; exit 0 ;;
+  *) usage >&2; exit 2 ;;
 esac
+[ "$#" -le 1 ] || { usage >&2; exit 2; }
+
+[ -r "$MANIFEST" ] || { echo "MANIFEST-MISSING $MANIFEST" >&2; exit 1; }
+
+# One stamp per run: every backup from a single run lands in the same dir.
+STAMP="$(date +%Y%m%d-%H%M%S)"
 
 link_one() { # link_one <src-rel> <dest-absolute>
-  local src="$REPO_ROOT/$1" dest="$2"
+  local src dest rel backup n
+  src="$REPO_ROOT/$1"; dest="$2"
   if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$src" ]; then
     echo "SKIP $dest (already correct)"; return 0
   fi
   if [ "$MODE" = "dry-run" ]; then echo "LINK $dest -> $src"; return 0; fi
   if [ -e "$dest" ] || [ -L "$dest" ]; then
-    local rel="${dest#$HOME/}"
-    local backup="$HOME/.dotfiles-backup/$(date +%Y%m%d-%H%M%S)/$rel"
+    rel="${dest#"$HOME"/}"
+    backup="$HOME/.dotfiles-backup/$STAMP/$rel"
+    n=0
+    while [ -e "$backup" ]; do
+      n=$((n + 1)); backup="$HOME/.dotfiles-backup/$STAMP/$rel.$n"
+    done
     mkdir -p "$(dirname "$backup")"
     echo "BACKUP $dest -> $backup"
     mv "$dest" "$backup"
@@ -36,12 +49,18 @@ link_one() { # link_one <src-rel> <dest-absolute>
   echo "LINK $dest -> $src"
 }
 
-while read -r src dest; do
+while read -r src dest || [[ -n "$src" ]]; do
   case "$src" in \#*|"") continue ;; esac
+  if [[ -z "${dest:-}" ]]; then
+    echo "MANIFEST-BAD (empty dest): $src" >&2; exit 1
+  fi
   dest="${dest/#\~/$HOME}"
   case "$dest" in
     "$HOME"/*) ;;
     *) echo "REFUSE $dest (outside HOME)" >&2; exit 1 ;;
+  esac
+  case "$dest" in
+    */../*|*/..|../*|..) echo "REFUSE $dest (.. component escapes HOME)" >&2; exit 1 ;;
   esac
   if [ "$MODE" != "verify" ] && [ ! -e "$REPO_ROOT/$src" ]; then
     echo "SRC-MISSING $REPO_ROOT/$src" >&2; exit 1

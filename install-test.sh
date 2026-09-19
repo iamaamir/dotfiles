@@ -2,6 +2,7 @@
 # Sandbox suite for the one-click installer. Never touches the live $HOME.
 # Tests that mutate repo-side files (stub, src-hide) always guard with a
 # trap restore, so INT/TERM can never lose data.
+# shellcheck disable=SC2016 # $0/$1 inside single-quoted bash -c bodies expand in the INNER shell by design.
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SANDBOX="$(mktemp -d "${TMPDIR:-/tmp}/dotfiles-sandbox-XXXXXXXX")"
@@ -60,6 +61,25 @@ t "link refuses dest outside HOME" bash -c '
 t "link rejects unknown flag" bash -c '
   out=$("$1/link.sh" --bogus 2>&1); rc=$?
   [ "$rc" -eq 2 ] && printf "%s" "$out" | grep -q "usage"' "$SANDBOX" "$REPO_ROOT"
+t "link rejects extra args" bash -c '
+  d="$0/extra"; mkdir -p "$d"
+  out=$(HOME="$d" "$1/link.sh" --dry-run --verify 2>&1); rc=$?
+  [ "$rc" -eq 2 ] && printf "%s" "$out" | grep -q "usage" &&
+  [ ! -e "$d/.zshrc" ]' "$SANDBOX" "$REPO_ROOT"
+t "link rejects .. escape" bash -c '
+  printf "zsh/.zshrc ~/.x/../../suite-escape\n" > "$0/escape-manifest" &&
+  out=$(LINKS_MANIFEST="$0/escape-manifest" HOME="$0/h" "$1/link.sh" 2>&1); rc=$?
+  rm -f "$0/escape-manifest"
+  [ "$rc" -ne 0 ] && printf "%s" "$out" | grep -q "REFUSE" &&
+  [ ! -e "$0/suite-escape" ]' "$SANDBOX" "$REPO_ROOT"
+t "link fails cleanly on missing manifest" bash -c '
+  out=$(LINKS_MANIFEST="$0/does-not-exist" HOME="$0" "$1/link.sh" 2>&1); rc=$?
+  [ "$rc" -ne 0 ] && printf "%s" "$out" | grep -q "MANIFEST-MISSING"' "$SANDBOX" "$REPO_ROOT"
+t "link reads unterminated last line" bash -c '
+  d="$0/unterm"; mkdir -p "$d" &&
+  printf "zsh/.zshrc ~/.zshrc\nzsh/.zshenv ~/.zshenv" > "$d/mm" &&
+  HOME="$d" LINKS_MANIFEST="$d/mm" "$1/link.sh" >/dev/null 2>&1 &&
+  [ -L "$d/.zshrc" ] && [ -L "$d/.zshenv" ]' "$SANDBOX" "$REPO_ROOT"
 t "second run is a no-op (all SKIP)" bash -c '
   d="$0/noop"; mkdir -p "$d" &&
   HOME="$d" "$1/link.sh" >/dev/null 2>&1 &&
@@ -101,11 +121,46 @@ t "bootstrap clones when ~/dotfiles missing (stub git)" bash -c '
   printf "#!/usr/bin/env bash\necho \"stub-git \$*\" >> \"$0/git.log\"\n" > "$stub/git"
   chmod +x "$stub/git"
   HOME="$0" BOOTSTRAP_DRY_RUN=1 PATH="$stub:/usr/bin:/bin" "$1/bootstrap.sh" >/dev/null 2>&1
-  grep -q "stub-git clone" "$0/git.log"' "$SANDBOX" "$REPO_ROOT"
+  grep -q "stub-git clone --recurse-submodules" "$0/git.log"' "$SANDBOX" "$REPO_ROOT"
+t "bootstrap pulls and updates submodules when checkout exists" bash -c '
+  stub="$0/stubbin2"; mkdir -p "$stub" "$0/dots/dotfiles/.git"
+  rm -f "$0/git2.log"
+  printf "#!/usr/bin/env bash\necho \"stub-git \$*\" >> \"$0/git2.log\"\n" > "$stub/git"
+  chmod +x "$stub/git"
+  HOME="$0/dots" BOOTSTRAP_DRY_RUN=1 PATH="$stub:/usr/bin:/bin" "$1/bootstrap.sh" >/dev/null 2>&1
+  grep -q "stub-git -C .* pull --ff-only" "$0/git2.log" &&
+  grep -q "stub-git -C .* submodule update --init --recursive" "$0/git2.log"' "$SANDBOX" "$REPO_ROOT"
+t "bootstrap refuses non-checkout dir" bash -c '
+  stub="$0/stubbin3"; mkdir -p "$stub"
+  printf "#!/usr/bin/env bash\necho stub-git >> \"$0/git3.log\"\n" > "$stub/git"
+  chmod +x "$stub/git"
+  d="$0/dots3"; mkdir -p "$d"; echo junk > "$d/dotfiles"
+  out=$(HOME="$d" PATH="$stub:/usr/bin:/bin" "$1/bootstrap.sh" 2>&1); rc=$?
+  [ "$rc" -ne 0 ] && printf "%s" "$out" | grep -q "move it aside"' "$SANDBOX" "$REPO_ROOT"
+t "bootstrap --help exits before git" bash -c '
+  stub="$0/stubbin4"; mkdir -p "$stub"
+  printf "#!/usr/bin/env bash\necho stub-git >> \"$0/git4.log\"\n" > "$stub/git"
+  chmod +x "$stub/git"
+  rm -f "$0/git4.log"
+  out=$(HOME="$0" PATH="$stub:/usr/bin:/bin" "$1/bootstrap.sh" --help 2>&1); rc=$?
+  [ "$rc" -eq 0 ] && printf "%s" "$out" | grep -q "usage" &&
+  { [ ! -e "$0/git4.log" ] || ! grep -q "stub-git" "$0/git4.log"; }' "$SANDBOX" "$REPO_ROOT"
 t "install.sh passes --dry-run to linker" bash -c '
   d="$0/idrypass"; mkdir -p "$d"
   out=$(HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" --dry-run 2>&1); rc=$?
   [ "$rc" -eq 0 ] && grep -q "^LINK " <<<"$out"' "$SANDBOX" "$REPO_ROOT"
+t "install.sh dry-run plans all 6 entries" bash -c '
+  d="$0/idrycount"; mkdir -p "$d"
+  out=$(HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" --dry-run 2>&1); rc=$?
+  [ "$rc" -eq 0 ] && [ "$(grep -c "^LINK " <<<"$out")" -eq 6 ]' "$SANDBOX" "$REPO_ROOT"
+t "install.sh rejects extra args" bash -c '
+  d="$0/iextra"; mkdir -p "$d"
+  out=$(HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" --dry-run extra 2>&1); rc=$?
+  [ "$rc" -eq 2 ] && printf "%s" "$out" | grep -q "usage" &&
+  [ ! -e "$d/.zshrc" ]' "$SANDBOX" "$REPO_ROOT"
+t "install.sh --help exits clean" bash -c '
+  out=$(HOME="$0" INSTALL_SANDBOX=1 "$1/install.sh" --help 2>&1); rc=$?
+  [ "$rc" -eq 0 ] && printf "%s" "$out" | grep -q "usage"' "$SANDBOX" "$REPO_ROOT"
 t "install.sh dry-run creates no symlinks, dirs, or stubs" bash -c '
   p="$1/zsh/privatealiases.zsh"; had=0
   restore() { rm -f "$p"; if [ "$had" = 1 ]; then mv "$p.testsave" "$p"; fi; }
@@ -123,6 +178,19 @@ t "install.sh full sandbox run links, verifies, smokes" bash -c '
   printf "%s" "$out" | grep -q "SMOKE.*sources silently OK" &&
   printf "%s" "$out" | grep -q "^DONE: 6 links OK" &&
   HOME="$d" "$1/link.sh" --verify >/dev/null 2>&1' "$SANDBOX" "$REPO_ROOT"
+t "linked nvim tree is non-empty" bash -c '
+  d="$0/invim"; mkdir -p "$d"; ln -sfn "$1" "$d/dotfiles" &&
+  HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" >/dev/null 2>&1 &&
+  [ -n "$(ls -A "$d/.config/nvim")" ]' "$SANDBOX" "$REPO_ROOT"
+t "empty backup dir does not fail install" bash -c '
+  d="$0/ibackup"; mkdir -p "$d/.dotfiles-backup"; ln -sfn "$1" "$d/dotfiles" &&
+  out=$(HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" 2>&1); rc=$?
+  [ "$rc" -eq 0 ] && printf "%s" "$out" | grep -q "^DONE:"' "$SANDBOX" "$REPO_ROOT"
+t "one run uses a single backup dir" bash -c '
+  d="$0/ionestamp"; mkdir -p "$d/.config" &&
+  echo a > "$d/.zshrc" && echo b > "$d/.config/starship.toml" &&
+  HOME="$d" "$1/link.sh" >/dev/null 2>&1 &&
+  [ "$(find "$d/.dotfiles-backup" -mindepth 1 -maxdepth 1 -type d | wc -l)" -eq 1 ]' "$SANDBOX" "$REPO_ROOT"
 t "install.sh verify-only checks without mutating" bash -c '
   p="$1/zsh/privatealiases.zsh"; had=0
   restore() { rm -f "$p"; if [ "$had" = 1 ]; then mv "$p.testsave" "$p"; fi; }
@@ -172,7 +240,7 @@ t "sandbox removed after suite exit" bash -c '
   echo "$out" | grep -q "PASS=" &&
   dir=$(echo "$out" | grep "^SANDBOX=" | cut -d= -f2) &&
   [ -n "$dir" ] && [ ! -e "$dir" ]' "$REPO_ROOT/install-test.sh"
-t "shellcheck clean on all installer scripts" shellcheck -S error "$REPO_ROOT/link.sh" "$REPO_ROOT/bootstrap.sh" "$REPO_ROOT/install.sh" "$REPO_ROOT/install-test.sh"
+t "shellcheck clean on all installer scripts" shellcheck "$REPO_ROOT/link.sh" "$REPO_ROOT/bootstrap.sh" "$REPO_ROOT/install.sh" "$REPO_ROOT/install-test.sh"
 t "no temp litter in sandbox parent" bash -c '
   before=$(ls "${TMPDIR:-/tmp}" | grep -c "dotfiles-sandbox-" || true) &&
   d="$0/ilitter"; mkdir -p "$d"; ln -sfn "$1" "$d/dotfiles" &&

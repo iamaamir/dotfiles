@@ -1,9 +1,20 @@
 #!/usr/bin/env bash
 # One-click entry: curl -fsSL .../bootstrap.sh | bash
-# Ensures git, clones (or fast-forward pulls) ~/dotfiles, execs install.sh.
+# Ensures git, clones (or fast-forward pulls) ~/dotfiles with submodules,
+# then execs install.sh. Flags pass through to install.sh.
 set -euo pipefail
 REPO_URL="https://github.com/iamaamir/dotfiles.git"
 REPO_DIR="$HOME/dotfiles"
+
+usage() { echo "usage: bootstrap.sh [--dry-run|--verify|--help] (flags pass through to install.sh)"; }
+
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run|--verify) ;;
+    --help|-h) usage; exit 0 ;;
+    *) usage >&2; exit 2 ;;
+  esac
+done
 
 if ! command -v git >/dev/null 2>&1; then
   echo "git not found — triggering Xcode CLT install (opens a macOS dialog)."
@@ -16,11 +27,15 @@ if [ -d "$REPO_DIR/.git" ]; then
     echo "git pull --ff-only failed (diverged?); cd $REPO_DIR and reconcile, then re-run." >&2
     exit 1
   }
+  git -C "$REPO_DIR" submodule update --init --recursive || {
+    echo "submodule update failed in $REPO_DIR; cd there and fix, then re-run." >&2
+    exit 1
+  }
 elif [ -e "$REPO_DIR" ]; then
   echo "$REPO_DIR exists and is not a git checkout; move it aside, then re-run." >&2
   exit 1
 else
-  git clone "$REPO_URL" "$REPO_DIR"
+  git clone --recurse-submodules "$REPO_URL" "$REPO_DIR"
 fi
 if [ "${BOOTSTRAP_DRY_RUN:-0}" = 1 ]; then exit 0; fi
 cd "$REPO_DIR"

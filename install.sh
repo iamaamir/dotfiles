@@ -7,13 +7,17 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SANDBOX="${INSTALL_SANDBOX:-}"
 
+usage() { echo "usage: install.sh [--dry-run|--verify|--help]"; }
+
 DRY_RUN=0; VERIFY_ONLY=0
 case "${1:-}" in
   "") ;;
   --dry-run) DRY_RUN=1 ;;
   --verify) VERIFY_ONLY=1 ;;
-  *) echo "usage: install.sh [--dry-run|--verify]" >&2; exit 2 ;;
+  --help|-h) usage; exit 0 ;;
+  *) usage >&2; exit 2 ;;
 esac
+[ "$#" -le 1 ] || { usage >&2; exit 2; }
 
 if [ -z "$SANDBOX" ] && [ "$DRY_RUN" = 0 ] && [ "$VERIFY_ONLY" = 0 ]; then
   #install brew (skip when already installed: re-running pays the full
@@ -88,10 +92,15 @@ if [ -z "$SANDBOX" ] && [ "$VERIFY_ONLY" = 0 ]; then
   fi
 fi
 
-# closing summary
-backup_dir="none"
+# closing summary (no `ls` globs: an empty backup dir must not fail the run)
+backup_dir=""
 if [ -d "$HOME/.dotfiles-backup" ]; then
-  backup_dir="$(ls -dt "$HOME"/.dotfiles-backup/*/ | head -n 1)"
+  shopt -s nullglob
+  for d in "$HOME"/.dotfiles-backup/*/; do
+    [[ -z "$backup_dir" || "$d" > "$backup_dir" ]] && backup_dir="$d"
+  done
+  shopt -u nullglob
 fi
+[ -z "$backup_dir" ] && backup_dir="none"
 echo "DONE: $ok_count links OK; backups: $backup_dir; secrets stub: $STUB_MSG"
 echo "upnext run 'sh ./ssh.sh <email@xyz.com>' to generate ssh key"
