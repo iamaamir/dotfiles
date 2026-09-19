@@ -98,5 +98,19 @@ cp "$GPTCOMMIT" "$FIXTURE/nolib/solo.sh"
 check "missing-lib help exit 0" "0" "$?"
 if grep -q "ticket library missing" "$FIXTURE/helpout"; then echo "ok - missing-lib warns"; else echo "NOT OK - missing-lib warns"; fail=1; fi
 
+# ── degraded path: missing lib still generates (no ticket, warning) ─────────
+echo more > "$FIXTURE/repo/other.txt"
+git -C "$FIXTURE/repo" add other.txt
+MSG_NOLIB="$FIXTURE/nolib-msg"
+(
+  cd "$FIXTURE/repo" &&
+  PATH="$FIXTURE/bin:$PATH" OPENAI_API_KEY=test \
+    GPTCOMMIT_NO_SLEEP=1 GPTCOMMIT_TTY=/dev/null \
+    bash "$FIXTURE/nolib/solo.sh" "$MSG_NOLIB" message 2>"$FIXTURE/nolib-err"
+)
+check "missing-lib generation exit 0" "0" "$?"
+check "missing-lib writes draft" "feat(TEST-123): stubbed commit" "$(cat "$MSG_NOLIB")"
+if grep -q "ticket library missing" "$FIXTURE/nolib-err"; then echo "ok - missing-lib generation warns"; else echo "NOT OK - missing-lib generation warns"; fail=1; fi
+
 if (( fail )); then echo "FAIL"; else echo "PASS"; fi
 exit "$fail"
