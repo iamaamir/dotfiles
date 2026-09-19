@@ -74,6 +74,22 @@ t "stub recreated from example when missing" bash -c '
   if [ "$had" = 1 ]; then mv "$p.testsave" "$p"; fi
   exit "$rc"' "$SANDBOX" "$REPO_ROOT"
 t "stow no longer installed by brew.sh" bash -c '! grep -qx "brew install stow" "$1/brew.sh"' "$SANDBOX" "$REPO_ROOT"
+# Self-nesting guard: the check below re-runs this suite once to prove the
+# sandbox is removed on exit; the inner run must not re-nest (see above).
+if [ "${INSTALL_TEST_NESTED:-0}" != 1 ]; then
+t "sandbox removed after suite exit" bash -c '
+  out=$(INSTALL_TEST_NESTED=1 VERBOSE=1 bash "$0") &&
+  echo "$out" | grep -q "PASS=" &&
+  dir=$(echo "$out" | grep "^SANDBOX=" | cut -d= -f2) &&
+  [ -n "$dir" ] && [ ! -e "$dir" ]' "$REPO_ROOT/install-test.sh"
+t "shellcheck clean on all installer scripts" shellcheck -S error "$REPO_ROOT/link.sh" "$REPO_ROOT/bootstrap.sh" "$REPO_ROOT/install.sh" "$REPO_ROOT/install-test.sh"
+t "no temp litter in sandbox parent" bash -c '
+  before=$(ls "${TMPDIR:-/tmp}" | grep -c "dotfiles-sandbox-" || true) &&
+  d="$0/ilitter"; mkdir -p "$d" &&
+  HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" >/dev/null 2>&1 &&
+  after=$(ls "${TMPDIR:-/tmp}" | grep -c "dotfiles-sandbox-" || true) &&
+  [ "$before" = "$after" ]' "$SANDBOX" "$REPO_ROOT"
+fi
 
 echo "PASS=$PASS FAIL=$FAIL"
 [ "$FAIL" -eq 0 ]
