@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Install command-line tools using Homebrew.
 
 # Make sure we’re using the latest Homebrew.
@@ -92,6 +93,7 @@ brew install fzf
 brew install git-delta
 brew install zsh-syntax-highlighting
 brew install zsh-autosuggestions
+brew install zsh-vi-mode
 
 
 # To install useful key bindings and fuzzy completion:

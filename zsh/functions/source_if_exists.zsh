@@ -1,4 +1,5 @@
-# Define a generic function to source files if they exist
+# Source files if they exist. Missing OPTIONAL files (fzf, autojump) are
+# silent; missing REQUIRED files (everything under ~/dotfiles) warn once.
 source_if_exists() {
     local files=("$@")
     local failed_files=()
@@ -9,7 +10,16 @@ source_if_exists() {
                 failed_files+=("$file_path")
             fi
         else
-            failed_files+=("$file_path")
+            case "$file_path" in
+                # Optional editor/tool integrations: silent when absent.
+                "$HOME/.fzf.zsh"|*/autojump.sh)
+                    ;;
+                # Secrets file is gitignored: absent on every fresh clone,
+                # so its absence is expected, not a warning.
+                */privatealiases.zsh)
+                    ;;
+                *) failed_files+=("$file_path") ;;
+            esac
         fi
     done
 
