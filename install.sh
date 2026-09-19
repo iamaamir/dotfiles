@@ -5,6 +5,9 @@
 #install brew packages
 ./brew.sh
 
+# kitty 
+curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin
+
 # all clones goest here
 mkdir -p ~/git
 
