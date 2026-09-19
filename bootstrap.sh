@@ -8,15 +8,19 @@ REPO_DIR="$HOME/dotfiles"
 
 usage() { echo "usage: bootstrap.sh [--dry-run|--verify|--help]"; echo "(clones/pulls ~/dotfiles first; flags govern the install phase. BOOTSTRAP_DRY_RUN=1 stops after clone/pull.)"; }
 
-nflags=0
+nflags=0; wanthelp=0
 for arg in "$@"; do
   case "$arg" in
     --dry-run|--verify) nflags=$((nflags + 1)) ;;
-    --help|-h) usage; exit 0 ;;
+    --help|-h) wanthelp=1 ;;
     *) usage >&2; exit 2 ;;
   esac
 done
 [ "$nflags" -le 1 ] || { usage >&2; exit 2; }
+if [ "$wanthelp" = 1 ]; then
+  [ "$#" -eq 1 ] || { usage >&2; exit 2; }
+  usage; exit 0
+fi
 
 if ! command -v git >/dev/null 2>&1; then
   echo "git not found — triggering Xcode CLT install (opens a macOS dialog)."
@@ -37,7 +41,10 @@ elif [ -e "$REPO_DIR" ]; then
   echo "$REPO_DIR exists and is not a git checkout; move it aside, then re-run." >&2
   exit 1
 else
-  git clone --recurse-submodules "$REPO_URL" "$REPO_DIR"
+  git clone --recurse-submodules "$REPO_URL" "$REPO_DIR" || {
+    echo "git clone failed (network? auth?); check connectivity and re-run the one-line installer." >&2
+    exit 1
+  }
 fi
 if [ "${BOOTSTRAP_DRY_RUN:-0}" = 1 ]; then exit 0; fi
 cd "$REPO_DIR"

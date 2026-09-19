@@ -5,16 +5,17 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SANDBOX="${INSTALL_SANDBOX:-}"
+SANDBOX=""
+if [ "${INSTALL_SANDBOX:-0}" = 1 ]; then SANDBOX=1; fi
 
 usage() { echo "usage: install.sh [--dry-run|--verify|--help]"; }
 
 DRY_RUN=0; VERIFY_ONLY=0
 case "${1:-}" in
-  "") ;;
+  "") [ "$#" -eq 0 ] || { usage >&2; exit 2; } ;;
   --dry-run) DRY_RUN=1 ;;
   --verify) VERIFY_ONLY=1 ;;
-  --help|-h) usage; exit 0 ;;
+  --help|-h) [ "$#" -le 1 ] || { usage >&2; exit 2; }; usage; exit 0 ;;
   *) usage >&2; exit 2 ;;
 esac
 [ "$#" -le 1 ] || { usage >&2; exit 2; }
@@ -23,15 +24,24 @@ if [ -z "$SANDBOX" ] && [ "$DRY_RUN" = 0 ] && [ "$VERIFY_ONLY" = 0 ]; then
   #install brew (skip when already installed: re-running pays the full
   # installer on every clone refresh and aborts under set -euo on hiccups)
   if ! command -v brew >/dev/null 2>&1; then
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || {
+      echo "BREW INSTALL FAILED — fix and re-run ./install.sh (idempotent)" >&2
+      exit 1
+    }
   fi
 
   #install brew packages (repo-root independent)
-  "$SCRIPT_DIR/brew.sh"
+  "$SCRIPT_DIR/brew.sh" || {
+    echo "BREW PACKAGES FAILED — fix and re-run ./install.sh (idempotent)" >&2
+    exit 1
+  }
 
   # kitty (skip when already installed)
   if ! command -v kitty >/dev/null 2>&1; then
-    curl -fsSL https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin
+    curl -fsSL https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin || {
+      echo "KITTY INSTALL FAILED — fix and re-run ./install.sh (idempotent)" >&2
+      exit 1
+    }
   fi
 fi
 
@@ -46,7 +56,11 @@ fi
 if [ "$VERIFY_ONLY" = 0 ]; then
   # symlinks from the manifest (backup-then-link); ~/git only after the
   # links succeed so a link abort leaves no partial mutation behind
-  "$SCRIPT_DIR/link.sh"
+  "$SCRIPT_DIR/link.sh" || {
+    echo "LINK FAILED — fix links.txt or the paths above, then re-run ./install.sh" >&2
+    echo "backups (if any) are under ~/.dotfiles-backup/<stamp>/; ./link.sh --verify to confirm" >&2
+    exit 1
+  }
   # all clones go here
   mkdir -p "$HOME/git"
 fi

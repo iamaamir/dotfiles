@@ -132,6 +132,24 @@ t "double-slash HOME still links and verifies" bash -c '
 t "link --help with extra args still fails" bash -c '
   out=$("$1/link.sh" --help extra 2>&1); rc=$?
   [ "$rc" -eq 2 ]' "$SANDBOX" "$REPO_ROOT"
+t "empty-string arg is rejected" bash -c '
+  d="$0/emptyarg"; mkdir -p "$d"
+  out=$(HOME="$d" "$1/link.sh" "" 2>&1); rc1=$?
+  out2=$(HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" "" 2>&1); rc2=$?
+  [ "$rc1" -eq 2 ] && [ "$rc2" -eq 2 ] &&
+  printf "%s" "$out" | grep -q "usage" &&
+  [ ! -e "$d/.zshrc" ]' "$SANDBOX" "$REPO_ROOT"
+t "LINKS_MANIFEST ignored outside sandbox" bash -c '
+  printf "zsh/.zshrc /tmp/install-test-seam-evil\n" > "$0/seam-evil" &&
+  d="$0/seam"; mkdir -p "$d"
+  out=$(env -u INSTALL_SANDBOX HOME="$d" LINKS_MANIFEST="$0/seam-evil" "$1/link.sh" 2>&1); rc=$?
+  rm -f "$0/seam-evil"
+  [ "$rc" -eq 0 ] &&
+  [ "$(readlink "$d/.zshrc")" = "$1/zsh/.zshrc" ] &&
+  [ ! -e /tmp/install-test-seam-evil ]' "$SANDBOX" "$REPO_ROOT"
+t "INSTALL_SANDBOX=0 does not crash parsing" bash -c '
+  out=$(HOME="$0" INSTALL_SANDBOX=0 "$1/install.sh" --help 2>&1); rc=$?
+  [ "$rc" -eq 0 ] && printf "%s" "$out" | grep -q "usage"' "$SANDBOX" "$REPO_ROOT"
 t "link fails cleanly on missing manifest" bash -c '
   out=$(LINKS_MANIFEST="$0/does-not-exist" HOME="$0" "$1/link.sh" 2>&1); rc=$?
   [ "$rc" -ne 0 ] && printf "%s" "$out" | grep -q "MANIFEST-MISSING"' "$SANDBOX" "$REPO_ROOT"
@@ -148,6 +166,13 @@ t "dry-run changes nothing on disk" bash -c '
   d="$0/dry"; mkdir -p "$d"
   HOME="$d" "$1/link.sh" --dry-run >/dev/null 2>&1
   [ ! -e "$d/.zshrc" ] && [ ! -L "$d/.zshrc" ] && [ ! -d "$d/.dotfiles-backup" ]' "$SANDBOX" "$REPO_ROOT"
+t "dry-run refuses missing src" bash -c '
+  d="$0/drymiss"; mkdir -p "$d" &&
+  printf "zsh/NOPE-missing ~/.zshrc\n" > "$d/mm" &&
+  out=$(HOME="$d" LINKS_MANIFEST="$d/mm" "$1/link.sh" --dry-run 2>&1); rc=$?
+  [ "$rc" -ne 0 ] && printf "%s" "$out" | grep -q "SRC-MISSING" &&
+  ! printf "%s" "$out" | grep -q "^LINK " &&
+  [ ! -e "$d/.zshrc" ]' "$SANDBOX" "$REPO_ROOT"
 t "verify reports all OK" bash -c '
   set -o pipefail
   d="$0/verify"; mkdir -p "$d" &&
@@ -209,6 +234,9 @@ t "bootstrap --help exits before git" bash -c '
   out=$(HOME="$0" PATH="$stub:/usr/bin:/bin" "$1/bootstrap.sh" --help 2>&1); rc=$?
   [ "$rc" -eq 0 ] && printf "%s" "$out" | grep -q "usage" &&
   { [ ! -e "$0/git4.log" ] || ! grep -q "stub-git" "$0/git4.log"; }' "$SANDBOX" "$REPO_ROOT"
+t "bootstrap --help with extra args fails" bash -c '
+  out=$(HOME="$0" BOOTSTRAP_DRY_RUN=1 "$1/bootstrap.sh" --help extra 2>&1); rc=$?
+  [ "$rc" -eq 2 ] && printf "%s" "$out" | grep -q "usage"' "$SANDBOX" "$REPO_ROOT"
 t "install.sh passes --dry-run to linker" bash -c '
   d="$0/idrypass"; mkdir -p "$d"
   out=$(HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" --dry-run 2>&1); rc=$?

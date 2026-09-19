@@ -6,14 +6,20 @@
 # MANIFEST may be overridden via LINKS_MANIFEST (used by the test suite for
 # negative cases); it defaults to links.txt next to this script.
 set -euo pipefail
+set -f # no pathname expansion anywhere below: manifest/HOME may contain glob chars
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MANIFEST="${LINKS_MANIFEST:-$REPO_ROOT/links.txt}"
+MANIFEST="$REPO_ROOT/links.txt"
+# Test seam, sandbox-only: a stale global export must never redirect
+# production runs (round-7 finding).
+if [ "${INSTALL_SANDBOX:-0}" = 1 ] && [ -n "${LINKS_MANIFEST:-}" ]; then
+  MANIFEST="$LINKS_MANIFEST"
+fi
 
 usage() { echo "usage: link.sh [--dry-run|--verify|--help]"; }
 
 MODE="link"
 case "${1:-}" in
-  "") ;;
+  "") [ "$#" -eq 0 ] || { usage >&2; exit 2; } ;;
   --dry-run) MODE="dry-run" ;;
   --verify) MODE="verify" ;;
   --help|-h) [ "$#" -le 1 ] || { usage >&2; exit 2; }; usage; exit 0 ;;
@@ -41,18 +47,27 @@ normalize() { # normalize <abs-path>: lexical . and .. resolution, no fs access
   printf '%s' "${out:-/}"
 }
 
+# Canonical HOME: normalized once so `//` (e.g. macOS TMPDIR) and trailing
+# slashes cannot desync textual paths from containment checks below.
+: "${HOME:?HOME must be set}"
+HOME="$(normalize "$HOME")"
+HN="$HOME"
+
+under_home() { # under_home <abs-path>: 0 iff path equals $HN or starts
+               # with $HN/ — literal substring compare, so glob chars in
+               # $HOME cannot change the semantics
+  local p="$1" n=${#HN}
+  [ "${p:0:n}" = "$HN" ] && { [ "${#p}" -eq "$n" ] || [ "${p:n:1}" = "/" ]; }
+}
+
 no_escape() { # no_escape <abs-path>: 0 iff no strict parent dir of path
               # (from $HOME down) is a symlink escaping $HOME. Symlinks
               # pointing inside $HOME are followed (lived-in Macs).
-  local target="$1" parent rel cur comp tgt norm homenorm
-  homenorm="$(normalize "$HOME")"
-  case "$(normalize "$target")" in
-    "$homenorm"|"$homenorm"/*) ;;
-    *) echo "REFUSE $target (outside HOME)" >&2; return 1 ;;
-  esac
+  local target="$1" parent rel cur comp tgt norm
+  under_home "$target" || { echo "REFUSE $target (outside HOME)" >&2; return 1; }
   parent="$(dirname "$target")"
-  [ "$parent" = "$HOME" ] && return 0
-  rel="${parent#"$HOME"/}"
+  [ "$parent" = "$HN" ] && return 0
+  rel="${parent:${#HN}+1}"
   cur="$HOME"
   local IFS='/'
   for comp in $rel; do
@@ -63,10 +78,9 @@ no_escape() { # no_escape <abs-path>: 0 iff no strict parent dir of path
         /*) norm="$(normalize "$tgt")" ;;
         *) norm="$(normalize "$(dirname "$cur")/$tgt")" ;;
       esac
-      case "$norm" in
-        "$homenorm"|"$homenorm"/*) cur="$norm" ;;
-        *) echo "REFUSE $target (symlink parent $cur escapes HOME)" >&2; return 1 ;;
-      esac
+      if under_home "$norm"; then cur="$norm"; else
+        echo "REFUSE $target (symlink parent $cur escapes HOME)" >&2; return 1
+      fi
     fi
   done
   return 0
@@ -80,7 +94,7 @@ link_one() { # link_one <src-rel> <dest-absolute>
   fi
   if [ "$MODE" = "dry-run" ]; then echo "LINK $dest -> $src"; return 0; fi
   if [ -e "$dest" ] || [ -L "$dest" ]; then
-    rel="${dest#"$HOME"/}"
+    rel="${dest:${#HN}+1}"
     backup="$HOME/.dotfiles-backup/$STAMP/$rel"
     n=0
     while [ -e "$backup" ] || [ -L "$backup" ]; do
@@ -111,16 +125,14 @@ while read -r src dest extra || [[ -n "$src" ]]; do
     \~[!/]*) echo "REFUSE $dest (~user expansion unsupported)" >&2; exit 1 ;;
   esac
   dest="${dest/#\~/$HOME}"
-  if [ "$dest" = "$HOME" ] || [ "$dest" = "$HOME/" ]; then
-    echo "REFUSE $dest (dest is HOME itself)" >&2; exit 1
-  fi
-  case "$dest" in
-    "$HOME"/*) ;;
-    *) echo "REFUSE $dest (outside HOME)" >&2; exit 1 ;;
-  esac
   case "$dest" in
     */../*|*/..|../*|..) echo "REFUSE $dest (.. component escapes HOME)" >&2; exit 1 ;;
   esac
+  dest="$(normalize "$dest")"
+  if [ "$dest" = "$HN" ]; then
+    echo "REFUSE $dest (dest is HOME itself)" >&2; exit 1
+  fi
+  under_home "$dest" || { echo "REFUSE $dest (outside HOME)" >&2; exit 1; }
   no_escape "$dest" || exit 1
   if [ "$MODE" != "verify" ] && [ ! -e "$REPO_ROOT/$src" ]; then
     echo "SRC-MISSING $REPO_ROOT/$src" >&2; exit 1
