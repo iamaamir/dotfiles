@@ -32,9 +32,12 @@ C (keep stow — violates the stated constraint).
 
 `bootstrap.sh` is thin and curl-pipe-safe: `set -euo pipefail`, no prompts
 before the repo is on disk. It ensures `git` (missing → `xcode-select
---install`, then re-exec), clones to `~/dotfiles` (or `git pull --ff-only` if
-present), then execs `./install.sh`. All flags pass through
-(`--dry-run`, `--verify`).
+--install`, then the user re-runs the one command — the CLT popup is a GUI
+dialog that cannot complete unattended, so true auto-re-exec would hang),
+clones with `--recurse-submodules` to `~/dotfiles` (or `git pull --ff-only`
++ `submodule update --init --recursive` if present), then execs
+`./install.sh`. Flags (`--dry-run`, `--verify`) govern the install phase;
+clone/pull always runs (`BOOTSTRAP_DRY_RUN=1` stops after clone/pull).
 
 ## 2. Manifest + linker
 

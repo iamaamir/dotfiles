@@ -28,7 +28,7 @@ t "fresh link creates ~/.zshrc symlink" bash -c '
 t "all 6 manifest dests resolve" bash -c '
   d="$0/all6"; mkdir -p "$d" &&
   HOME="$d" "$1/link.sh" >/dev/null 2>&1 &&
-  while read -r src dest; do case "$src" in \#*|"") continue;; esac
+  while read -r src dest || [[ -n "$src" ]]; do case "$src" in \#*|"") continue;; esac
     dest="${dest/#\~/$d}"
     [ -e "$dest" ] || exit 1
   done < "$1/links.txt"' "$SANDBOX" "$REPO_ROOT"
@@ -72,6 +72,11 @@ t "link rejects .. escape" bash -c '
   rm -f "$0/escape-manifest"
   [ "$rc" -ne 0 ] && printf "%s" "$out" | grep -q "REFUSE" &&
   [ ! -e "$0/suite-escape" ]' "$SANDBOX" "$REPO_ROOT"
+t "link refuses HOME itself as dest" bash -c '
+  printf "zsh/.zshrc ~/\n" > "$0/homemanifest" &&
+  out=$(LINKS_MANIFEST="$0/homemanifest" HOME="$0" "$1/link.sh" 2>&1); rc=$?
+  rm -f "$0/homemanifest"
+  [ "$rc" -ne 0 ] && printf "%s" "$out" | grep -q "REFUSE"' "$SANDBOX" "$REPO_ROOT"
 t "link fails cleanly on missing manifest" bash -c '
   out=$(LINKS_MANIFEST="$0/does-not-exist" HOME="$0" "$1/link.sh" 2>&1); rc=$?
   [ "$rc" -ne 0 ] && printf "%s" "$out" | grep -q "MANIFEST-MISSING"' "$SANDBOX" "$REPO_ROOT"
@@ -85,13 +90,9 @@ t "second run is a no-op (all SKIP)" bash -c '
   HOME="$d" "$1/link.sh" >/dev/null 2>&1 &&
   [ -z "$(HOME="$d" "$1/link.sh" 2>&1 | grep -v "^SKIP ")" ]' "$SANDBOX" "$REPO_ROOT"
 t "dry-run changes nothing on disk" bash -c '
-  p="$1/zsh/privatealiases.zsh"; had=0
-  restore() { rm -f "$p"; if [ "$had" = 1 ]; then mv "$p.testsave" "$p"; fi; }
-  trap restore EXIT INT TERM
-  if [ -f "$p" ]; then had=1; mv "$p" "$p.testsave"; fi
   d="$0/dry"; mkdir -p "$d"
   HOME="$d" "$1/link.sh" --dry-run >/dev/null 2>&1
-  [ ! -e "$d/.zshrc" ] && [ ! -d "$d/.dotfiles-backup" ]' "$SANDBOX" "$REPO_ROOT"
+  [ ! -e "$d/.zshrc" ] && [ ! -L "$d/.zshrc" ] && [ ! -d "$d/.dotfiles-backup" ]' "$SANDBOX" "$REPO_ROOT"
 t "verify reports all OK" bash -c '
   set -o pipefail
   d="$0/verify"; mkdir -p "$d" &&
@@ -168,7 +169,7 @@ t "install.sh dry-run creates no symlinks, dirs, or stubs" bash -c '
   if [ -f "$p" ]; then had=1; mv "$p" "$p.testsave"; fi
   d="$0/idry"; mkdir -p "$d"
   HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" --dry-run >/dev/null 2>&1
-  [ ! -e "$d/.zshrc" ] && [ ! -e "$d/git" ] && [ ! -f "$p" ]' "$SANDBOX" "$REPO_ROOT"
+  [ ! -e "$d/.zshrc" ] && [ ! -L "$d/.zshrc" ] && [ ! -e "$d/git" ] && [ ! -f "$p" ]' "$SANDBOX" "$REPO_ROOT"
 t "install.sh full sandbox run links, verifies, smokes" bash -c '
   set -o pipefail
   d="$0/ifull"; mkdir -p "$d"; ln -sfn "$1" "$d/dotfiles" &&
@@ -201,6 +202,16 @@ t "install.sh verify-only checks without mutating" bash -c '
   [ "$rc" -ne 0 ] &&
   printf "%s" "$out" | grep -q "^MISSING " &&
   [ ! -e "$d/git" ] && [ ! -e "$d/.zshrc" ] && [ ! -f "$p" ]' "$SANDBOX" "$REPO_ROOT"
+t "verify-only reports missing stub honestly" bash -c '
+  p="$1/zsh/privatealiases.zsh"; had=0
+  restore() { rm -f "$p"; if [ "$had" = 1 ]; then mv "$p.testsave" "$p"; fi; }
+  trap restore EXIT INT TERM
+  if [ -f "$p" ]; then had=1; mv "$p" "$p.testsave"; fi
+  d="$0/iverifystub"; mkdir -p "$d"; ln -sfn "$1" "$d/dotfiles" &&
+  HOME="$d" "$1/link.sh" >/dev/null 2>&1 &&
+  out=$(HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" --verify 2>&1); rc=$?
+  [ "$rc" -eq 0 ] &&
+  printf "%s" "$out" | grep -q "secrets stub: missing (--verify"' "$SANDBOX" "$REPO_ROOT"
 t "install.sh rejects unknown flag" bash -c '
   d="$0/ibogus"; mkdir -p "$d"
   out=$(HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" --bogus 2>&1); rc=$?

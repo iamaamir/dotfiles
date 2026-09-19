@@ -6,7 +6,7 @@ set -euo pipefail
 REPO_URL="https://github.com/iamaamir/dotfiles.git"
 REPO_DIR="$HOME/dotfiles"
 
-usage() { echo "usage: bootstrap.sh [--dry-run|--verify|--help] (flags pass through to install.sh)"; }
+usage() { echo "usage: bootstrap.sh [--dry-run|--verify|--help]"; echo "(clones/pulls ~/dotfiles first; flags govern the install phase. BOOTSTRAP_DRY_RUN=1 stops after clone/pull.)"; }
 
 for arg in "$@"; do
   case "$arg" in

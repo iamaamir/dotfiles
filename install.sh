@@ -45,17 +45,22 @@ fi
 
 if [ "$VERIFY_ONLY" = 0 ]; then
   # all clones goest here
-  mkdir -p ~/git
+  mkdir -p "$HOME/git"
 
   # symlinks from the manifest (backup-then-link)
   "$SCRIPT_DIR/link.sh"
 fi
 
 # secrets stub so sourcing never breaks on a fresh clone
-STUB_MSG="present"
-if [ "$VERIFY_ONLY" = 0 ] && [ ! -f "$SCRIPT_DIR/zsh/privatealiases.zsh" ]; then
-  cp "$SCRIPT_DIR/zsh/privatealiases.zsh.example" "$SCRIPT_DIR/zsh/privatealiases.zsh"
-  STUB_MSG="created from example (fill in your keys)"
+if [ ! -f "$SCRIPT_DIR/zsh/privatealiases.zsh" ]; then
+  if [ "$VERIFY_ONLY" = 0 ]; then
+    cp "$SCRIPT_DIR/zsh/privatealiases.zsh.example" "$SCRIPT_DIR/zsh/privatealiases.zsh"
+    STUB_MSG="created from example (fill in your keys)"
+  else
+    STUB_MSG="missing (--verify does not create it)"
+  fi
+else
+  STUB_MSG="present"
 fi
 
 # post-install confidence check: every manifest dest must resolve
@@ -86,7 +91,7 @@ else
 fi
 
 if [ -z "$SANDBOX" ] && [ "$VERIFY_ONLY" = 0 ]; then
-  if [[ "$SHELL" != *zsh ]]; then
+  if [[ "${SHELL:-}" != *zsh ]]; then
     echo "Switching default shell to zsh (needs password once)."
     chsh -s /bin/zsh
   fi

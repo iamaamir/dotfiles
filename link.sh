@@ -55,6 +55,9 @@ while read -r src dest || [[ -n "$src" ]]; do
     echo "MANIFEST-BAD (empty dest): $src" >&2; exit 1
   fi
   dest="${dest/#\~/$HOME}"
+  if [ "$dest" = "$HOME" ] || [ "$dest" = "$HOME/" ]; then
+    echo "REFUSE $dest (dest is HOME itself)" >&2; exit 1
+  fi
   case "$dest" in
     "$HOME"/*) ;;
     *) echo "REFUSE $dest (outside HOME)" >&2; exit 1 ;;
