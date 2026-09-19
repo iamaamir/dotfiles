@@ -10,6 +10,7 @@ if [[ -n "$WEZTERM_PANE" ]]; then
 fi
 
 export EDITOR="/opt/homebrew/bin/nvim"
+export GIT_CONFIG_GLOBAL=$HOME/dotfiles/git/.gitconfig
 
 source ~/dotfiles/zsh/functions/source_if_exists.zsh
 
@@ -23,7 +24,7 @@ files_to_source=(
 )
 source_if_exists "${files_to_source[@]}"
 
-source <(kubectl completion zsh)
+# source <(kubectl completion zsh)
 #test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
 export BAT_THEME="gruvbox-dark"
@@ -37,7 +38,7 @@ eval "$(pyenv init - zsh)"
 source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source $(brew --prefix)/opt/zsh-vi-mode/share/zsh-vi-mode/zsh-vi-mode.plugin.zsh
-eval "$(gh copilot alias -- zsh)"
+# eval "$(gh copilot alias -- zsh)"
 
 # tabtab source for packages
 # uninstall by removing these lines
@@ -48,3 +49,23 @@ chpwd() {
   echo "Now in: $PWD"
   ls
 }
+
+. "$HOME/.local/bin/env"
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/mak/.lmstudio/bin"
+# End of LM Studio CLI section
+
+
+# Pi
+export PATH="/Users/mak/.local/share/fnm/node-versions/v24.14.0/installation/bin:$PATH"
+
+# bun completions
+[ -s "/Users/mak/.bun/_bun" ] && source "/Users/mak/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+# kimi-code
+export PATH="/Users/mak/.kimi-code/bin:$PATH"
