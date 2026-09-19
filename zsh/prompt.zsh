@@ -7,6 +7,9 @@ if [[ -z "${ENABLE_CAT_PROMPT:-}" ]]; then
   return 0 2>/dev/null || exit 0
 fi
 
+# PROMPT contains ${...} expansions — without this they render literally.
+setopt prompt_subst
+
 autoload -Uz add-zsh-hook vcs_info 2>/dev/null || true
 
 # --- Global Variables ---
@@ -71,20 +74,19 @@ precmd_set_status_emoji() {
 # --- Hook Registration ---
 # add-zsh-hook is autoloaded above; vcs_info for the Git segment.
 zstyle ':vcs_info:git:*' formats ' %b'
-autoload -Uz add-zsh-hook vcs_info 2>/dev/null || true
-add-zsh-hook precmd vcs_info
 
 # Add our custom functions to Zsh's hook chains.
+# ORDER MATTERS: the status hook runs FIRST so `local exit_status=$?`
+# still sees the real command status. vcs_info runs after (its own
+# exit 0 would otherwise mask failures as success).
+add-zsh-hook precmd precmd_set_status_emoji
+add-zsh-hook precmd vcs_info
 add-zsh-hook preexec preexec_capture_command
 add-zsh-hook preexec preexec_sudo_indicator
-add-zsh-hook precmd precmd_set_status_emoji
-# Note: vcs_info segment is set up above via zstyle; precmd_set_status_emoji
-# runs in the precmd chain after vcs_info so exit status handling stays local.
 
 # --- Final Prompt Definition ---
 # This defines how your prompt will look.
 # It uses the global variables set by the hook functions.
 
-						
 PROMPT='%F{#7DFFFF}%~%f${vcs_info_msg_0_}${_MY_SUDO_PROMPT_INDICATOR}
 ${_MY_PROMPT_STATUS_SYMBOL} %f'
