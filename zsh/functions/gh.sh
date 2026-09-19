@@ -1,5 +1,5 @@
 #!/bin/bash
-# Sourced into zsh via .zshrc (gh PR helpers). Keep syntax POSIX/zsh-compatible.
+# Sourced into zsh via .zshrc. zsh/bash syntax only (uses [[ ]], (( )), local -a).
 
 # ANSI color codes
 GREEN="\e[32m"
@@ -39,14 +39,26 @@ pr() {
   local base_branch="" title="" body="" assignee="$DEFAULT_ASSIGNEE" head=""
   local draft=true dry_run=false assume_yes=false
 
-  # Parse flags (everything else is rejected so typos fail loudly)
+  # Parse flags (everything else is rejected so typos fail loudly).
+  # Value flags need an explicit arity check: "${2:?…}" alone prints the
+  # shell's own error AND falls through to shift 2, double-reporting.
+  local needs_value
   while (( $# )); do
     case "$1" in
-      --base)     base_branch="${2:?--base requires a branch name}"; shift 2 ;;
-      --title)    title="${2:?--title requires a value}"; shift 2 ;;
-      --body)     body="${2:?--body requires a value}"; shift 2 ;;
-      --assignee) assignee="${2:?--assignee requires a value}"; shift 2 ;;
-      --head)     head="${2:?--head requires a value}"; shift 2 ;;
+      --base|--title|--body|--assignee|--head)
+        needs_value="$1"
+        if (( $# < 2 )); then
+          echo -e "${RED}${BOLD}❌ $needs_value requires a value (see pr --help) ❌${RESET}"
+          return 2
+        fi
+        case "$needs_value" in
+          --base)     base_branch="$2" ;;
+          --title)    title="$2" ;;
+          --body)     body="$2" ;;
+          --assignee) assignee="$2" ;;
+          --head)     head="$2" ;;
+        esac
+        shift 2 ;;
       --draft)    draft=true; shift ;;
       --no-draft) draft=false; shift ;;
       --dry-run)  dry_run=true; shift ;;
@@ -64,10 +76,12 @@ pr() {
     return 1
   fi
 
-  # Base branch: explicit flag wins (agents, pipes); otherwise fzf needs a TTY
+  # Base branch: explicit flag wins (agents, pipes); otherwise fzf needs a TTY.
+  # Accept local branches and anything resolving to a commit (remote
+  # branches, tags), since fresh clones may not have the base locally.
   if [[ -n "$base_branch" ]]; then
-    if ! git show-ref --verify --quiet "refs/heads/$base_branch"; then
-      echo -e "${RED}${BOLD}❌ Unknown local branch: $base_branch ❌${RESET}"
+    if ! git rev-parse --verify --quiet "$base_branch^{commit}" >/dev/null; then
+      echo -e "${RED}${BOLD}❌ Unknown base ref: $base_branch ❌${RESET}"
       return 1
     fi
   else
