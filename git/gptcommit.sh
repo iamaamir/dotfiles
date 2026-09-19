@@ -12,8 +12,20 @@ GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 NC='\033[0m'
 
-# Absolute path to this script (used by the hook stub)
-SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+# Absolute path to this script (used by the hook stub). Follows symlinks:
+# install_hook documents `ln -sf` as a manual install, and BASH_SOURCE
+# would otherwise point at the link's directory (no lib/ beside it).
+_SCRIPT_SRC="${BASH_SOURCE[0]}"
+if command -v readlink >/dev/null 2>&1; then
+  _rl_rounds=0
+  while [[ -L "$_SCRIPT_SRC" ]] && (( _rl_rounds < 20 )); do
+    _rl_target=$(readlink "$_SCRIPT_SRC")
+    [[ "$_rl_target" == /* ]] || _rl_target="$(dirname "$_SCRIPT_SRC")/$_rl_target"
+    _SCRIPT_SRC="$_rl_target"
+    _rl_rounds=$((_rl_rounds + 1))
+  done
+fi
+SCRIPT_PATH="$(cd "$(dirname "$_SCRIPT_SRC")" && pwd -P)/$(basename "$_SCRIPT_SRC")"
 
 # ── Logging helpers ─────────────────────────────────────────────────────────
 debug() {
@@ -25,6 +37,17 @@ debug() {
 info()  { echo -e "${GREEN}✨ $*${NC}" >&2; }
 warn()  { echo -e "${RED}⚠️  $*${NC}" >&2; }
 
+# Single home of the ticket rule (see git/lib/ticket.sh).
+# Graceful when the library is missing (moved copy, partial checkout):
+# warn and continue without a ticket rather than aborting the commit.
+if [[ -f "$(dirname "$SCRIPT_PATH")/lib/ticket.sh" ]]; then
+  # shellcheck disable=SC1091
+  . "$(dirname "$SCRIPT_PATH")/lib/ticket.sh"
+else
+  warn "ticket library missing; continuing without ticket inference."
+  ticket_from_branch() { return 0; }
+fi
+
 # ── Usage / Help ────────────────────────────────────────────────────────────
 print_help() {
   cat <<EOF
@@ -35,6 +58,13 @@ Commands:
   install   Install stub into .git/hooks/prepare-commit-msg
 
 With no COMMAND, runs the AI-powered prepare-commit-msg hook as before.
+
+Environment:
+  OPENAI_API_KEY    Required for AI generation (skips hook when unset).
+  GPTCOMMIT_DEBUG   Set to "true" for verbose debug output.
+  GPTCOMMIT_NO_SLEEP  Set to non-empty to skip retry backoff (tests).
+  GPTCOMMIT_TTY     Prompt device (default /dev/tty); /dev/null keeps
+                    the draft without prompting (tests, non-interactive).
 EOF
 }
 
@@ -160,15 +190,18 @@ if ! grep -q '^+[^+]' <<<"$DIFF"; then
   )
 
   if ((${#FALLBACKS[@]})); then
-    if [ ! -t 0 ]; then
-      # Non-interactive (hook without TTY): never block on select; take first.
-      COMMIT_MSG="${FALLBACKS[0]}"
-    else
+    # Pre-default: select assigns nothing on EOF (Ctrl-D) or an
+    # out-of-range number, so the first fallback stands in both cases.
+    COMMIT_MSG="${FALLBACKS[0]}"
+    if [ -t 0 ] && [[ "${GPTCOMMIT_TTY:-/dev/tty}" != /dev/null ]]; then
       echo "🎯 No additions detected. Choose a fallback:" >&2
       select opt in "${FALLBACKS[@]}" "Custom message"; do
         if [[ $opt == "Custom message" ]]; then
-          read -rp "Enter custom commit message: " COMMIT_MSG
-        else
+          # `|| true`: EOF (Ctrl-D) keeps the default instead of
+          # tripping set -e and aborting the commit.
+          read -rp "Enter custom commit message: " COMMIT_MSG || true
+          [[ -n $COMMIT_MSG ]] || COMMIT_MSG="${FALLBACKS[0]}"
+        elif [[ -n $opt ]]; then
           COMMIT_MSG="$opt"
         fi
         break
@@ -184,14 +217,15 @@ if ! grep -q '^+[^+]' <<<"$DIFF"; then
 fi
 
 # ── Branch & ticket inference ───────────────────────────────────────────────
-# Canonical ticket rule for this repo: [A-Z]{2,}-[0-9]+ (shared with the
-# legacy prepare-commit-msg hook; keep both in sync, prefer this file).
-BRANCH=$(git rev-parse --abbrev-ref HEAD)
-if [[ $BRANCH =~ ([A-Z]{2,}-[0-9]+) ]]; then
-  TICKET=${BASH_REMATCH[1]}
+# Canonical ticket rule lives in git/lib/ticket.sh (shared with the legacy
+# prepare-commit-msg hook). Pure function: branch name in, key out.
+# `|| true`: fresh repos have no HEAD yet (rc=128) — that means no ticket,
+# not a failed commit.
+BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+TICKET=$(ticket_from_branch "$BRANCH")
+if [[ -n $TICKET ]]; then
   info "🔖  Detected ticket: $TICKET"
 else
-  TICKET=""
   info "🔖  No ticket ID found"
 fi
 
@@ -223,7 +257,7 @@ LAST_MSG=""
 # raced parallel commits). BSD mktemp requires trailing Xs, hence no suffix.
 # EXIT trap so set -e aborts never leak /tmp files.
 GPT_TMP_JSON=$(mktemp /tmp/gptcommit.XXXXXX)
-trap 'rm -f "$GPT_TMP_JSON"' EXIT
+trap 'rm -f "$GPT_TMP_JSON"' EXIT INT TERM
 
 generate() {
   info "🤖  Generating AI draft…"
@@ -258,7 +292,10 @@ $DIFF
     elif (( code == 429 || code >= 500 )); then
       wait=$((2**attempt))
       warn "HTTP $code; retrying in ${wait}s..."
-      sleep $wait
+      # Test seam: GPTCOMMIT_NO_SLEEP=1 skips backoff (see gptcommit-test.sh).
+      if [[ -z "${GPTCOMMIT_NO_SLEEP:-}" ]]; then
+        sleep $wait
+      fi
     else
       break
     fi
@@ -275,25 +312,31 @@ COMMIT_MSG=$(sed '/^[[:space:]]*$/d' <<<"$COMMIT_MSG")
 [[ -z $COMMIT_MSG ]] && COMMIT_MSG="chore: update $STAGED_COUNT files"
 
 # ── Interactive accept/regenerate/skip ─────────────────────────────────────
-# No controlling terminal (GUI clients, IDEs): never block on /dev/tty —
-# the redirect would fail under set -e and abort the commit. Keep the
-# generated message and let the commit proceed.
-if [ ! -r /dev/tty ] || [ ! -w /dev/tty ]; then
+# Test seam: GPTCOMMIT_TTY overrides the prompt device (/dev/null answers
+# EOF → keeps the message; see gptcommit-test.sh).
+TTY=${GPTCOMMIT_TTY:-/dev/tty}
+# No controlling terminal (GUI clients, IDEs): never block on the TTY —
+# the redirect would fail under set -e and abort the commit. Directories
+# and FIFOs pass -r/-w but cannot take the prompt, so exclude them too.
+# Keep the generated message and let the commit proceed.
+if [[ -d "$TTY" || -p "$TTY" ]] || [ ! -r "$TTY" ] || [ ! -w "$TTY" ]; then
   info "No TTY detected; keeping generated message without prompting."
   printf '%s\n' "$COMMIT_MSG" > "$MSG_FILE"
   exit 0
 fi
-TTY=/dev/tty; tries=0
+tries=0
 while true; do
   printf '[AI] Proposed commit message:\n---\n%s\n---\n' "$COMMIT_MSG" >"$TTY"
-  printf 'Accept (y), Regenerate (r), Skip (s)? [y/r/s] '           >"$TTY"
-  read -r choice <"$TTY"
+  printf 'Accept (y), Regenerate (r), Skip (s)? [y/r/s] '           >>"$TTY"
+  # `|| true`: EOF (Ctrl-D, /dev/null TTY) is "no answer", not a fatal
+  # error — choice stays empty and the `*)` arm keeps the draft.
+  read -r choice <"$TTY" || true
   case "$choice" in
     y|Y) break ;;
     r|R)
       if (( tries < MAX_TRIES )); then
         ((tries++)); LAST_MSG="$COMMIT_MSG"
-        printf '[DEBUG] Regenerating (%d)...\n' "$tries" >/dev/tty
+        printf '[DEBUG] Regenerating (%d)...\n' "$tries" >>"$TTY"
         COMMIT_MSG=$(generate)
         COMMIT_MSG=$(sed '/^[[:space:]]*$/d' <<<"$COMMIT_MSG")
       else
