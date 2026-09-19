@@ -74,8 +74,8 @@ is a separate decision, not a bug.
 2. `brew.sh` packages (the `brew install stow` line is deleted).
 3. `link.sh` — plus flag branches: `--dry-run` prints the whole plan and
    exits before ANY mutation (no `~/git`, no stub, no smoke, no links);
-   `--verify` checks state without linking (no `mkdir`, no stub, no chsh)
-   and preserves the verify exit code.
+   `--verify` checks state without linking (no `mkdir`, no stub, no smoke,
+   no chsh) and preserves the verify exit code.
 4. `link.sh --verify` post-install confidence check inside `install.sh`
    (aborts the chain on failure); OK count feeds the closing summary.
 5. Secrets stub from `zsh/privatealiases.zsh.example` when missing.

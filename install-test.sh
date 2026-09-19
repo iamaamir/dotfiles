@@ -133,6 +133,19 @@ t "install.sh verify-only checks without mutating" bash -c '
   [ "$rc" -ne 0 ] &&
   printf "%s" "$out" | grep -q "^MISSING " &&
   [ ! -e "$d/git" ] && [ ! -e "$d/.zshrc" ] && [ ! -f "$p" ]' "$SANDBOX" "$REPO_ROOT"
+t "install.sh rejects unknown flag" bash -c '
+  d="$0/ibogus"; mkdir -p "$d"
+  out=$(HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" --bogus 2>&1); rc=$?
+  [ "$rc" -eq 2 ] && printf "%s" "$out" | grep -q "usage" &&
+  [ ! -e "$d/.zshrc" ] && [ ! -e "$d/git" ]' "$SANDBOX" "$REPO_ROOT"
+t "install.sh verify-only exit code is pure verify" bash -c '
+  src="$1/zsh/.zshrc"
+  restore() { mv "$src.noisy" "$src"; }; trap restore EXIT INT TERM
+  d="$0/iverifyrc"; mkdir -p "$d"; ln -sfn "$1" "$d/dotfiles" &&
+  HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" >/dev/null 2>&1 &&
+  cp "$src" "$src.noisy" && echo "echo SMOKE-PROBE-NOISE" >> "$src"
+  out=$(HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" --verify 2>&1); rc=$?
+  [ "$rc" -eq 0 ] && printf "%s" "$out" | grep -q "^OK "' "$SANDBOX" "$REPO_ROOT"
 t "install.sh smoke fails on noisy sourcing" bash -c '
   src="$1/zsh/.zshrc"
   restore() { mv "$src.noisy" "$src"; }; trap restore EXIT INT TERM
