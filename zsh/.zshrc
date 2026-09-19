@@ -56,7 +56,13 @@ if command -v starship >/dev/null 2>&1; then
   eval "$(starship init zsh)"
 fi
 
-source ~/dotfiles/zsh/functions/source_if_exists.zsh
+# The one load-bearing source: a relocated checkout without it has no
+# loader at all, so fail loud here instead of mysterious missing functions.
+if [[ -f ~/dotfiles/zsh/functions/source_if_exists.zsh ]]; then
+  source ~/dotfiles/zsh/functions/source_if_exists.zsh
+else
+  echo "dotfiles: missing ~/dotfiles/zsh/functions/source_if_exists.zsh; skipping shell helpers" >&2
+fi
 
 files_to_source=(
     ~/dotfiles/zsh/privatealiases.zsh
@@ -97,15 +103,16 @@ fi
 # uninstall by removing these lines
 [[ -f ~/.config/tabtab/__tabtab.zsh ]] && . ~/.config/tabtab/__tabtab.zsh || true
 
-# kubectl completion, cached: regenerates at most once per day so every
-# shell start does not pay a synchronous subshell.
+# kubectl completion, cached: regenerates when older than ~48h (BSD find
+# -mtime +1 means >48h, not 24h) so every shell start does not pay a
+# synchronous subshell.
 if (( $+commands[kubectl] )); then
   _kubectl_cache="$HOME/.cache/zsh/kubectl-completion.zsh"
   if [[ ! -f "$_kubectl_cache" ]] || [[ -n $(find "$_kubectl_cache" -mtime +1 2>/dev/null) ]]; then
     mkdir -p "${HOME}/.cache/zsh"
     _kubectl_tmp="$_kubectl_cache.tmp.$$"
     # Only move into place on success: a failed completion must never
-    # poison the cache with an empty file for the next 24h.
+    # poison the cache with an empty file for the next ~48h.
     if kubectl completion zsh >| "$_kubectl_tmp" 2>/dev/null && [[ -s "$_kubectl_tmp" ]]; then
       mv -f "$_kubectl_tmp" "$_kubectl_cache"
     else
