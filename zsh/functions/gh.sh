@@ -17,9 +17,11 @@ Usage: pr [OPTIONS]
 Create a GitHub PR for the current branch (draft by default).
 
 Options:
-  --base BRANCH      Base branch (skips the fzf picker; required without a TTY)
+  --base BRANCH      Base branch (skips the fzf picker; required without a TTY).
+                     Remote-only bases must be qualified: origin/<branch>.
   --title TITLE      PR title (skips gh's interactive title prompt)
   --body BODY        PR body (skips gh's interactive body prompt)
+                     (values starting with - need the --opt=value form)
   --assignee USER    Assignee (default: $DEFAULT_ASSIGNEE)
   --head BRANCH      Head branch (default: current branch)
   --draft            Create as draft (default)
@@ -44,21 +46,30 @@ pr() {
   # shell's own error AND falls through to shift 2, double-reporting.
   local needs_value
   while (( $# )); do
-    case "$1" in
+    # Split --opt=value form first so dash-leading values keep working.
+    local opt="$1" val=""
+    case "$opt" in
+      --*=*) val="${opt#*=}"; opt="${opt%%=*}" ;;
+    esac
+    case "$opt" in
       --base|--title|--body|--assignee|--head)
-        needs_value="$1"
-        if (( $# < 2 )); then
+        needs_value="$opt"
+        if [[ -n "$val" ]]; then
+          : # value came from --opt=value
+        elif (( $# >= 2 )) && [[ "$2" != -* ]]; then
+          val="$2"; shift
+        else
           echo -e "${RED}${BOLD}❌ $needs_value requires a value (see pr --help) ❌${RESET}"
           return 2
         fi
         case "$needs_value" in
-          --base)     base_branch="$2" ;;
-          --title)    title="$2" ;;
-          --body)     body="$2" ;;
-          --assignee) assignee="$2" ;;
-          --head)     head="$2" ;;
+          --base)     base_branch="$val" ;;
+          --title)    title="$val" ;;
+          --body)     body="$val" ;;
+          --assignee) assignee="$val" ;;
+          --head)     head="$val" ;;
         esac
-        shift 2 ;;
+        shift ;;
       --draft)    draft=true; shift ;;
       --no-draft) draft=false; shift ;;
       --dry-run)  dry_run=true; shift ;;
@@ -69,6 +80,12 @@ pr() {
       *)          echo -e "${RED}${BOLD}❌ Unexpected argument: $1 (see pr --help) ❌${RESET}"; return 2 ;;
     esac
   done
+
+  # Anything left after `--` is a caller error, not something to ignore.
+  if (( $# )); then
+    echo -e "${RED}${BOLD}❌ Unexpected argument(s) after --: $* (see pr --help) ❌${RESET}"
+    return 2
+  fi
 
   # Check if the current directory is a valid Git repository
   if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
