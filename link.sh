@@ -7,6 +7,18 @@ MANIFEST="$REPO_ROOT/links.txt"
 DRY_RUN=0
 [ "${1:-}" = "--dry-run" ] && DRY_RUN=1
 
+if [ "${1:-}" = "--verify" ]; then
+  rc=0
+  while read -r src dest; do
+    case "$src" in \#*|"") continue ;; esac
+    dest="${dest/#\~/$HOME}"; want="$REPO_ROOT/$src"
+    if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$want" ]; then echo "OK $dest";
+    elif [ -e "$dest" ] || [ -L "$dest" ]; then echo "BROKEN $dest (-> $(readlink "$dest" 2>/dev/null))"; rc=1;
+    else echo "MISSING $dest"; rc=1; fi
+  done < "$MANIFEST"
+  exit "$rc"
+fi
+
 link_one() { # link_one <src-rel> <dest-absolute>
   local src="$REPO_ROOT/$1" dest="$2"
   if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$src" ]; then

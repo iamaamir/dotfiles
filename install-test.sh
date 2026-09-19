@@ -27,6 +27,24 @@ t "all 6 manifest dests resolve" bash -c '
     dest="${dest/#\~/$0}"
     [ -e "$dest" ] || exit 1
   done < "$1/links.txt"' "$SANDBOX" "$REPO_ROOT"
+t "clash is backed up, not overwritten" bash -c '
+  d="$0/clash"; mkdir -p "$d" &&
+  echo original > "$d/.zshrc" &&
+  HOME="$d" "$1/link.sh" >/dev/null 2>&1 &&
+  [ -L "$d/.zshrc" ] &&
+  grep -rq original "$d/.dotfiles-backup/"' "$SANDBOX" "$REPO_ROOT"
+t "second run is a no-op (all SKIP)" bash -c '
+  d="$0/noop"; mkdir -p "$d" &&
+  HOME="$d" "$1/link.sh" >/dev/null 2>&1 &&
+  [ -z "$(HOME="$d" "$1/link.sh" 2>&1 | grep -v "^SKIP ")" ]' "$SANDBOX" "$REPO_ROOT"
+t "dry-run changes nothing" bash -c '
+  d="$0/dry"; mkdir -p "$d" &&
+  HOME="$d" "$1/link.sh" --dry-run >/dev/null 2>&1 &&
+  [ ! -e "$d/.zshrc" ] && [ ! -d "$d/.dotfiles-backup" ]' "$SANDBOX" "$REPO_ROOT"
+t "verify reports all OK" bash -c '
+  d="$0/verify"; mkdir -p "$d" &&
+  HOME="$d" "$1/link.sh" >/dev/null 2>&1 &&
+  HOME="$d" "$1/link.sh" --verify 2>&1 | grep -q "^OK"' "$SANDBOX" "$REPO_ROOT"
 
 echo "PASS=$PASS FAIL=$FAIL"
 [ "$FAIL" -eq 0 ]
