@@ -188,6 +188,11 @@ magic_commit() {
   lucky_commit "$(printf %s "$s" | xxd -p)"
 }
 
+
+cdwt() {
+  cd "$(git worktree list | fzf | awk '{print $1}')"
+}
+
 # Personal tools
 alias ask="~/dotfiles/zsh/functions/ask.sh"
 alias notes="~/dotfiles/notes.sh"
