@@ -71,7 +71,8 @@ precmd_set_status_emoji() {
 # --- Hook Registration ---
 # add-zsh-hook is autoloaded above; vcs_info for the Git segment.
 zstyle ':vcs_info:git:*' formats ' %b'
-autoload -Uz add-zsh-hook 2>/dev/null || true
+autoload -Uz add-zsh-hook vcs_info 2>/dev/null || true
+add-zsh-hook precmd vcs_info
 
 # Add our custom functions to Zsh's hook chains.
 add-zsh-hook preexec preexec_capture_command
