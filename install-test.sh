@@ -6,10 +6,16 @@
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SANDBOX="$(mktemp -d "${TMPDIR:-/tmp}/dotfiles-sandbox-XXXXXXXX")"
-cleanup() { rm -rf "$SANDBOX"; }
-trap cleanup EXIT INT TERM
 export INSTALL_SANDBOX=1 HOME="$SANDBOX"
 [ "${VERBOSE:-0}" = 1 ] && echo "SANDBOX=$SANDBOX"
+
+# The installer auto-creates this stub when missing; pre-create it here so
+# full-run tests never mutate repo state, and remove it on exit if we did.
+STUB_PATH="$REPO_ROOT/zsh/privatealiases.zsh"
+STUB_HAD=1
+[ -f "$STUB_PATH" ] || { STUB_HAD=0; cp "$STUB_PATH.example" "$STUB_PATH"; }
+cleanup() { rm -rf "$SANDBOX"; if [ "$STUB_HAD" = 0 ]; then rm -f "$STUB_PATH"; fi; }
+trap cleanup EXIT INT TERM
 
 PASS=0; FAIL=0
 t() { # t <name> <command...>: records PASS/FAIL, never aborts the suite
@@ -19,7 +25,7 @@ t() { # t <name> <command...>: records PASS/FAIL, never aborts the suite
 }
 
 t "manifest exists" test -f "$REPO_ROOT/links.txt"
-t "manifest has 6 mappings" test "$(grep -cvE '^\s*(#|$)' "$REPO_ROOT/links.txt")" -eq 6
+t "manifest has 6 mappings" test "$(grep -cvE '^[[:space:]]*(#|$)' "$REPO_ROOT/links.txt")" -eq 6
 t "link.sh exists and is executable" test -x "$REPO_ROOT/link.sh"
 t "fresh link creates ~/.zshrc symlink" bash -c '
   d="$0/fresh"; mkdir -p "$d" &&
@@ -100,6 +106,32 @@ t "link refuses HOME itself as dest" bash -c '
   out=$(LINKS_MANIFEST="$0/homemanifest" HOME="$0" "$1/link.sh" 2>&1); rc=$?
   rm -f "$0/homemanifest"
   [ "$rc" -ne 0 ] && printf "%s" "$out" | grep -q "REFUSE"' "$SANDBOX" "$REPO_ROOT"
+t "link refuses src escaping repo" bash -c '
+  printf "../outside-secret ~/.evil\n" > "$0/srcmanifest" &&
+  out=$(LINKS_MANIFEST="$0/srcmanifest" HOME="$0" "$1/link.sh" 2>&1); rc=$?
+  rm -f "$0/srcmanifest"
+  [ "$rc" -ne 0 ] && printf "%s" "$out" | grep -q "REFUSE" &&
+  [ ! -e "$0/.evil" ]' "$SANDBOX" "$REPO_ROOT"
+t "link refuses symlink parent escaping HOME" bash -c '
+  d="$0/esc"; mkdir -p "$d" &&
+  printf "zsh/.zshrc ~/.config/x\n" > "$d/mm" &&
+  rm -rf "$d/.config" && ln -s /tmp "$d/.config" &&
+  out=$(LINKS_MANIFEST="$d/mm" HOME="$d" "$1/link.sh" 2>&1); rc=$?
+  [ "$rc" -ne 0 ] && printf "%s" "$out" | grep -q "REFUSE"' "$SANDBOX" "$REPO_ROOT"
+t "link follows symlink parent inside HOME" bash -c '
+  d="$0/inner"; mkdir -p "$d/realcfg" &&
+  ln -s "$d/realcfg" "$d/.config" &&
+  HOME="$d" "$1/link.sh" >/dev/null 2>&1 &&
+  [ -L "$d/realcfg/starship.toml" ] &&
+  HOME="$d" "$1/link.sh" --verify >/dev/null 2>&1' "$SANDBOX" "$REPO_ROOT"
+t "double-slash HOME still links and verifies" bash -c '
+  d="$0//dblslash"; mkdir -p "$d" &&
+  HOME="$d" "$1/link.sh" >/dev/null 2>&1 &&
+  [ -L "$d/.zshrc" ] &&
+  HOME="$d" "$1/link.sh" --verify >/dev/null 2>&1' "$SANDBOX" "$REPO_ROOT"
+t "link --help with extra args still fails" bash -c '
+  out=$("$1/link.sh" --help extra 2>&1); rc=$?
+  [ "$rc" -eq 2 ]' "$SANDBOX" "$REPO_ROOT"
 t "link fails cleanly on missing manifest" bash -c '
   out=$(LINKS_MANIFEST="$0/does-not-exist" HOME="$0" "$1/link.sh" 2>&1); rc=$?
   [ "$rc" -ne 0 ] && printf "%s" "$out" | grep -q "MANIFEST-MISSING"' "$SANDBOX" "$REPO_ROOT"
@@ -111,7 +143,7 @@ t "link reads unterminated last line" bash -c '
 t "second run is a no-op (all SKIP)" bash -c '
   d="$0/noop"; mkdir -p "$d" &&
   HOME="$d" "$1/link.sh" >/dev/null 2>&1 &&
-  [ -z "$(HOME="$d" "$1/link.sh" 2>&1 | grep -v "^SKIP ")" ]' "$SANDBOX" "$REPO_ROOT"
+  [ "$(HOME="$d" "$1/link.sh" 2>&1 | grep -c "^SKIP ")" -eq 6 ]' "$SANDBOX" "$REPO_ROOT"
 t "dry-run changes nothing on disk" bash -c '
   d="$0/dry"; mkdir -p "$d"
   HOME="$d" "$1/link.sh" --dry-run >/dev/null 2>&1
@@ -193,6 +225,10 @@ t "install.sh rejects extra args" bash -c '
 t "install.sh --help exits clean" bash -c '
   out=$(HOME="$0" INSTALL_SANDBOX=1 "$1/install.sh" --help 2>&1); rc=$?
   [ "$rc" -eq 0 ] && printf "%s" "$out" | grep -q "usage"' "$SANDBOX" "$REPO_ROOT"
+t "install.sh --help with extra args still fails" bash -c '
+  d="$0/ihelpextra"; mkdir -p "$d"
+  out=$(HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" --help extra 2>&1); rc=$?
+  [ "$rc" -eq 2 ] && [ ! -e "$d/.zshrc" ]' "$SANDBOX" "$REPO_ROOT"
 t "install.sh dry-run creates no symlinks, dirs, or stubs" bash -c '
   p="$1/zsh/privatealiases.zsh"; had=0
   restore() { rm -f "$p"; if [ "$had" = 1 ]; then mv "$p.testsave" "$p"; fi; }
@@ -216,7 +252,9 @@ t "link abort leaves no ~/git behind" bash -c '
   d="$0/nogit"; mkdir -p "$d"; ln -sfn "$1" "$d/dotfiles" &&
   mv "$src" "$src.hide" &&
   out=$(HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" 2>&1); rc=$?
-  [ "$rc" -ne 0 ] && [ ! -e "$d/git" ]' "$SANDBOX" "$REPO_ROOT"
+  [ "$rc" -ne 0 ] && [ ! -e "$d/git" ] &&
+  printf "%s" "$out" | grep -q "LINK FAILED" &&
+  printf "%s" "$out" | grep -q "re-run ./install.sh"' "$SANDBOX" "$REPO_ROOT"
 t "linked nvim tree is non-empty" bash -c '
   d="$0/invim"; mkdir -p "$d"; ln -sfn "$1" "$d/dotfiles" &&
   HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" >/dev/null 2>&1 &&

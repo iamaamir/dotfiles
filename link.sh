@@ -16,7 +16,7 @@ case "${1:-}" in
   "") ;;
   --dry-run) MODE="dry-run" ;;
   --verify) MODE="verify" ;;
-  --help|-h) usage; exit 0 ;;
+  --help|-h) [ "$#" -le 1 ] || { usage >&2; exit 2; }; usage; exit 0 ;;
   *) usage >&2; exit 2 ;;
 esac
 [ "$#" -le 1 ] || { usage >&2; exit 2; }
@@ -26,6 +26,51 @@ esac
 # One stamp per run plus PID: every backup from a single run lands in the
 # same dir, and concurrent runs never share one.
 STAMP="$(date +%Y%m%d-%H%M%S)-$$"
+
+normalize() { # normalize <abs-path>: lexical . and .. resolution, no fs access
+  local p="$1" out comp
+  out=""
+  local IFS='/'
+  for comp in $p; do
+    case "$comp" in
+      ""|.) continue ;;
+      ..) out="${out%/*}" ;;
+      *) out="$out/$comp" ;;
+    esac
+  done
+  printf '%s' "${out:-/}"
+}
+
+no_escape() { # no_escape <abs-path>: 0 iff no strict parent dir of path
+              # (from $HOME down) is a symlink escaping $HOME. Symlinks
+              # pointing inside $HOME are followed (lived-in Macs).
+  local target="$1" parent rel cur comp tgt norm homenorm
+  homenorm="$(normalize "$HOME")"
+  case "$(normalize "$target")" in
+    "$homenorm"|"$homenorm"/*) ;;
+    *) echo "REFUSE $target (outside HOME)" >&2; return 1 ;;
+  esac
+  parent="$(dirname "$target")"
+  [ "$parent" = "$HOME" ] && return 0
+  rel="${parent#"$HOME"/}"
+  cur="$HOME"
+  local IFS='/'
+  for comp in $rel; do
+    cur="$cur/$comp"
+    if [ -L "$cur" ]; then
+      tgt="$(readlink "$cur")"
+      case "$tgt" in
+        /*) norm="$(normalize "$tgt")" ;;
+        *) norm="$(normalize "$(dirname "$cur")/$tgt")" ;;
+      esac
+      case "$norm" in
+        "$homenorm"|"$homenorm"/*) cur="$norm" ;;
+        *) echo "REFUSE $target (symlink parent $cur escapes HOME)" >&2; return 1 ;;
+      esac
+    fi
+  done
+  return 0
+}
 
 link_one() { # link_one <src-rel> <dest-absolute>
   local src dest rel backup n
@@ -41,6 +86,7 @@ link_one() { # link_one <src-rel> <dest-absolute>
     while [ -e "$backup" ] || [ -L "$backup" ]; do
       n=$((n + 1)); backup="$HOME/.dotfiles-backup/$STAMP/$rel.$n"
     done
+    no_escape "$backup" || return 1
     mkdir -p "$(dirname "$backup")"
     echo "BACKUP $dest -> $backup"
     mv "$dest" "$backup"
@@ -58,6 +104,9 @@ while read -r src dest extra || [[ -n "$src" ]]; do
   if [[ -z "${dest:-}" ]]; then
     echo "MANIFEST-BAD (empty dest): $src" >&2; exit 1
   fi
+  case "$src" in
+    /*|*/../*|*/..|../*|..) echo "REFUSE $src (src escapes repo)" >&2; exit 1 ;;
+  esac
   case "$dest" in
     \~[!/]*) echo "REFUSE $dest (~user expansion unsupported)" >&2; exit 1 ;;
   esac
@@ -72,6 +121,7 @@ while read -r src dest extra || [[ -n "$src" ]]; do
   case "$dest" in
     */../*|*/..|../*|..) echo "REFUSE $dest (.. component escapes HOME)" >&2; exit 1 ;;
   esac
+  no_escape "$dest" || exit 1
   if [ "$MODE" != "verify" ] && [ ! -e "$REPO_ROOT/$src" ]; then
     echo "SRC-MISSING $REPO_ROOT/$src" >&2; exit 1
   fi
