@@ -11,7 +11,13 @@ source_if_exists() {
             fi
         else
             case "$file_path" in
-                "$HOME/.fzf.zsh"|*/autojump.sh) ;;
+                # Optional editor/tool integrations: silent when absent.
+                "$HOME/.fzf.zsh"|*/autojump.sh)
+                    ;;
+                # Secrets file is gitignored: absent on every fresh clone,
+                # so its absence is expected, not a warning.
+                */privatealiases.zsh)
+                    ;;
                 *) failed_files+=("$file_path") ;;
             esac
         fi
