@@ -53,6 +53,17 @@ t "bootstrap clones when ~/dotfiles missing (stub git)" bash -c '
   chmod +x "$stub/git"
   HOME="$0" BOOTSTRAP_DRY_RUN=1 PATH="$stub:/usr/bin:/bin" "$1/bootstrap.sh" >/dev/null 2>&1
   grep -q "stub-git clone" "$0/git.log"' "$SANDBOX" "$REPO_ROOT"
+t "install.sh passes --dry-run to linker" bash -c '
+  d="$0/idrypass"; mkdir -p "$d" &&
+  HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" --dry-run 2>&1 | grep -q "^LINK "' "$SANDBOX" "$REPO_ROOT"
+t "install.sh dry-run creates no symlinks" bash -c '
+  d="$0/idry"; mkdir -p "$d" &&
+  HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" --dry-run >/dev/null 2>&1 &&
+  [ ! -e "$d/.zshrc" ]' "$SANDBOX" "$REPO_ROOT"
+t "install.sh full sandbox run links + verifies" bash -c '
+  d="$0/ifull"; mkdir -p "$d" &&
+  HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" >/dev/null 2>&1 &&
+  HOME="$d" "$1/link.sh" --verify >/dev/null 2>&1' "$SANDBOX" "$REPO_ROOT"
 
 echo "PASS=$PASS FAIL=$FAIL"
 [ "$FAIL" -eq 0 ]
