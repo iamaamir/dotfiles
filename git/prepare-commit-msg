@@ -1,13 +1,36 @@
 #!/bin/sh
 # author: iamaamir
 # Legacy opt-in hook: prepend an issue key from the branch name.
-# DEPRECATED in favor of git/gptcommit.sh, which owns the canonical ticket
-# rule ([A-Z]{2,}-[0-9]+). Kept for manual use only; do not install both.
+# DEPRECATED in favor of git/gptcommit.sh, but kept for manual use.
+# Shares the canonical ticket rule via git/lib/ticket.sh — do not
+# re-implement the regex here. Do not install both hooks at once.
+
+# resolve git/lib/ticket.sh next to this hook, following a symlinked install
+_HOOK_SRC="$0" _HOOK_DIR=$(dirname "$0")
+if command -v readlink >/dev/null 2>&1; then
+  _rl_rounds=0
+  while [ -L "$_HOOK_SRC" ] && [ "$_rl_rounds" -lt 20 ]; do
+    _rl_target=$(readlink "$_HOOK_SRC")
+    case "$_rl_target" in
+      /*) _HOOK_SRC="$_rl_target" ;;
+      *)  _HOOK_SRC="$_HOOK_DIR/$_rl_target" ;;
+    esac
+    _HOOK_DIR=$(dirname "$_HOOK_SRC")
+    _rl_rounds=$((_rl_rounds + 1))
+  done
+fi
+if [ -f "$_HOOK_DIR/lib/ticket.sh" ]; then
+  # shellcheck disable=SC1091
+  . "$_HOOK_DIR/lib/ticket.sh"
+else
+  echo "prepare-commit-msg: lib/ticket.sh not found next to hook; skipping ticket." >&2
+  exit 0 # never break a commit when the library is missing
+fi
 
 # this is opt in hook and disabled by default
 # to enable it add export ENABLE_TICKET_MSG=true in your bashrc/zshrc
 if [ -z "${ENABLE_TICKET_MSG:-}" ] || [ "$ENABLE_TICKET_MSG" = false ]; then
-  exit 0
+    exit 0
 fi
 
 
@@ -16,14 +39,21 @@ if [ "${2:-}" = "merge" ] || [ "${2:-}" = "commit" ]; then
     exit 0
 fi
 
-TICKET_KEY=$(git branch | grep -o "\* \(.*/\)*[A-Z]\{2,\}-[0-9]\+" | grep -o "[A-Z]\{2,\}-[0-9]\+")
+TICKET_KEY=$(ticket_from_branch "$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)")
 # skip with original msg if no key found in branch name
-if [ $? -ne 0 ]; then
+if [ -z "$TICKET_KEY" ]; then
     exit 0
 fi
 
 # echo "pre commit key ${TICKET_KEY}"
 TEMP=$(mktemp /tmp/commitmsg-XXXXX)
 trap 'rm -f "$TEMP"' EXIT INT TERM
-(echo "$(cat "$1") [$TICKET_KEY]") > "$TEMP"
+if [ -s "$1" ]; then
+  # Append to the subject line only: $(...) would strip trailing blank lines.
+  sed -e '1s/$/ ['"$TICKET_KEY"']/' "$1" > "$TEMP"
+  # sed preserves a missing trailing newline; restore it.
+  if [ -n "$(tail -c 1 "$TEMP")" ]; then printf '\n' >> "$TEMP"; fi
+else
+  echo " [$TICKET_KEY]" > "$TEMP"
+fi
 cat "$TEMP" > "$1"
