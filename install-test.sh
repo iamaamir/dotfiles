@@ -45,6 +45,14 @@ t "verify reports all OK" bash -c '
   d="$0/verify"; mkdir -p "$d" &&
   HOME="$d" "$1/link.sh" >/dev/null 2>&1 &&
   HOME="$d" "$1/link.sh" --verify 2>&1 | grep -q "^OK"' "$SANDBOX" "$REPO_ROOT"
+t "bootstrap syntax clean" bash -n "$REPO_ROOT/bootstrap.sh"
+t "bootstrap shellcheck clean" shellcheck -S error "$REPO_ROOT/bootstrap.sh"
+t "bootstrap clones when ~/dotfiles missing (stub git)" bash -c '
+  stub="$0/stubbin"; mkdir -p "$stub"
+  printf "#!/usr/bin/env bash\necho \"stub-git \$*\" >> \"$0/git.log\"\n" > "$stub/git"
+  chmod +x "$stub/git"
+  HOME="$0" BOOTSTRAP_DRY_RUN=1 PATH="$stub:/usr/bin:/bin" "$1/bootstrap.sh" >/dev/null 2>&1
+  grep -q "stub-git clone" "$0/git.log"' "$SANDBOX" "$REPO_ROOT"
 
 echo "PASS=$PASS FAIL=$FAIL"
 [ "$FAIL" -eq 0 ]
