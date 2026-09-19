@@ -31,7 +31,13 @@ alias about="neofetch"
 alias whoami="id -un"
 # a bit faster grep
 alias grep="grep -IE --exclude-dir=.git --exclude-dir=node_modules"
-alias ghbrowse="gh browse -b `git rev-parse --abbrev-ref HEAD`"
+# NOTE: never use backticks/$() inside a double-quoted alias — the shell
+# runs the substitution once at definition time (i.e. every terminal boot),
+# printing errors outside repos and freezing the value forever. ghbrowse
+# used to be such an alias; it is a function so the branch resolves per call.
+ghbrowse() {
+  gh browse -b "$(git rev-parse --abbrev-ref HEAD)"
+}
 alias showpr="gh pr view --web"
 alias gst="git status"
 alias gd="git diff"
