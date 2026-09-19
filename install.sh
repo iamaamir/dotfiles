@@ -39,16 +39,16 @@ if [ "$DRY_RUN" = 1 ]; then
   # Plan only: the linker prints every action, nothing else runs.
   "$SCRIPT_DIR/link.sh" --dry-run
   echo "DRY-RUN: no changes made (no symlinks, dirs, stubs, or shell changes)"
-  echo "upnext run './install.sh' to apply, 'sh ./ssh.sh <email@xyz.com>' for ssh keys"
+  echo "up next, run './install.sh' to apply, 'sh ./ssh.sh <email@xyz.com>' for ssh keys"
   exit 0
 fi
 
 if [ "$VERIFY_ONLY" = 0 ]; then
-  # all clones goest here
-  mkdir -p "$HOME/git"
-
-  # symlinks from the manifest (backup-then-link)
+  # symlinks from the manifest (backup-then-link); ~/git only after the
+  # links succeed so a link abort leaves no partial mutation behind
   "$SCRIPT_DIR/link.sh"
+  # all clones go here
+  mkdir -p "$HOME/git"
 fi
 
 # secrets stub so sourcing never breaks on a fresh clone
@@ -83,6 +83,7 @@ if [ "$VERIFY_ONLY" = 0 ]; then
   if [ "$smoke_rc" -ne 0 ] || [ -n "$smoke_out" ]; then
     echo "SMOKE FAIL: sourcing ~/.zshrc rc=$smoke_rc output:" >&2
     printf '%s\n' "$smoke_out" >&2
+    echo "hint: the checkout must live at ~/dotfiles (sourcing hardcodes that path)" >&2
     exit 1
   fi
   echo "SMOKE ~/.zshrc parses + sources silently OK"
@@ -108,4 +109,4 @@ if [ -d "$HOME/.dotfiles-backup" ]; then
 fi
 [ -z "$backup_dir" ] && backup_dir="none"
 echo "DONE: $ok_count links OK; backups: $backup_dir; secrets stub: $STUB_MSG"
-echo "upnext run 'sh ./ssh.sh <email@xyz.com>' to generate ssh key"
+echo "up next, run 'sh ./ssh.sh <email@xyz.com>' to generate ssh key"

@@ -21,10 +21,11 @@ case "${1:-}" in
 esac
 [ "$#" -le 1 ] || { usage >&2; exit 2; }
 
-[ -r "$MANIFEST" ] || { echo "MANIFEST-MISSING $MANIFEST" >&2; exit 1; }
+[ -f "$MANIFEST" ] && [ -r "$MANIFEST" ] || { echo "MANIFEST-MISSING $MANIFEST" >&2; exit 1; }
 
-# One stamp per run: every backup from a single run lands in the same dir.
-STAMP="$(date +%Y%m%d-%H%M%S)"
+# One stamp per run plus PID: every backup from a single run lands in the
+# same dir, and concurrent runs never share one.
+STAMP="$(date +%Y%m%d-%H%M%S)-$$"
 
 link_one() { # link_one <src-rel> <dest-absolute>
   local src dest rel backup n
@@ -37,7 +38,7 @@ link_one() { # link_one <src-rel> <dest-absolute>
     rel="${dest#"$HOME"/}"
     backup="$HOME/.dotfiles-backup/$STAMP/$rel"
     n=0
-    while [ -e "$backup" ]; do
+    while [ -e "$backup" ] || [ -L "$backup" ]; do
       n=$((n + 1)); backup="$HOME/.dotfiles-backup/$STAMP/$rel.$n"
     done
     mkdir -p "$(dirname "$backup")"
@@ -49,11 +50,17 @@ link_one() { # link_one <src-rel> <dest-absolute>
   echo "LINK $dest -> $src"
 }
 
-while read -r src dest || [[ -n "$src" ]]; do
+while read -r src dest extra || [[ -n "$src" ]]; do
   case "$src" in \#*|"") continue ;; esac
+  if [[ -n "${extra:-}" ]]; then
+    echo "MANIFEST-BAD (extra field): $src $dest $extra" >&2; exit 1
+  fi
   if [[ -z "${dest:-}" ]]; then
     echo "MANIFEST-BAD (empty dest): $src" >&2; exit 1
   fi
+  case "$dest" in
+    \~[!/]*) echo "REFUSE $dest (~user expansion unsupported)" >&2; exit 1 ;;
+  esac
   dest="${dest/#\~/$HOME}"
   if [ "$dest" = "$HOME" ] || [ "$dest" = "$HOME/" ]; then
     echo "REFUSE $dest (dest is HOME itself)" >&2; exit 1

@@ -52,6 +52,29 @@ t "link refuses missing src" bash -c '
   out=$(HOME="$d" "$1/link.sh" 2>&1); rc=$?
   [ "$rc" -ne 0 ] && printf "%s" "$out" | grep -q "SRC-MISSING" &&
   [ ! -e "$d/.zshrc" ]' "$SANDBOX" "$REPO_ROOT"
+t "mid-manifest missing src aborts, earlier links stand" bash -c '
+  src="$1/.config/starship.toml"
+  restore() { mv "$src.hide" "$src"; }; trap restore EXIT INT TERM
+  d="$0/midsrc"; mkdir -p "$d" &&
+  mv "$src" "$src.hide" &&
+  out=$(HOME="$d" "$1/link.sh" 2>&1); rc=$?
+  [ "$rc" -ne 0 ] && printf "%s" "$out" | grep -q "SRC-MISSING" &&
+  [ -L "$d/.zshrc" ] && [ ! -e "$d/.config/starship.toml" ]' "$SANDBOX" "$REPO_ROOT"
+t "link rejects extra manifest field" bash -c '
+  printf "zsh/.zshrc ~/.zshrc extra-field\n" > "$0/extra-manifest" &&
+  out=$(LINKS_MANIFEST="$0/extra-manifest" HOME="$0" "$1/link.sh" 2>&1); rc=$?
+  rm -f "$0/extra-manifest"
+  [ "$rc" -ne 0 ] && printf "%s" "$out" | grep -q "MANIFEST-BAD"' "$SANDBOX" "$REPO_ROOT"
+t "link rejects directory manifest" bash -c '
+  mkdir -p "$0/manifestdir" &&
+  out=$(LINKS_MANIFEST="$0/manifestdir" HOME="$0" "$1/link.sh" 2>&1); rc=$?
+  rmdir "$0/manifestdir"
+  [ "$rc" -ne 0 ] && printf "%s" "$out" | grep -q "MANIFEST-MISSING"' "$SANDBOX" "$REPO_ROOT"
+t "link rejects tilde-user dest" bash -c '
+  printf "zsh/.zshrc ~otheruser/.zshrc\n" > "$0/usermanifest" &&
+  out=$(LINKS_MANIFEST="$0/usermanifest" HOME="$0/h4" "$1/link.sh" 2>&1); rc=$?
+  rm -f "$0/usermanifest"
+  [ "$rc" -ne 0 ] && printf "%s" "$out" | grep -q "REFUSE"' "$SANDBOX" "$REPO_ROOT"
 t "link refuses dest outside HOME" bash -c '
   printf "zsh/.zshrc /tmp/install-test-evil-target\n" > "$0/evil-manifest" &&
   out=$(LINKS_MANIFEST="$0/evil-manifest" HOME="$0" "$1/link.sh" 2>&1); rc=$?
@@ -138,6 +161,14 @@ t "bootstrap refuses non-checkout dir" bash -c '
   d="$0/dots3"; mkdir -p "$d"; echo junk > "$d/dotfiles"
   out=$(HOME="$d" PATH="$stub:/usr/bin:/bin" "$1/bootstrap.sh" 2>&1); rc=$?
   [ "$rc" -ne 0 ] && printf "%s" "$out" | grep -q "move it aside"' "$SANDBOX" "$REPO_ROOT"
+t "bootstrap rejects dual flags before git work" bash -c '
+  stub="$0/stubbin5"; mkdir -p "$stub"
+  rm -f "$0/git5.log"
+  printf "#!/usr/bin/env bash\necho \"stub-git \$*\" >> \"$0/git5.log\"\n" > "$stub/git"
+  chmod +x "$stub/git"
+  out=$(HOME="$0" PATH="$stub:/usr/bin:/bin" "$1/bootstrap.sh" --dry-run --verify 2>&1); rc=$?
+  [ "$rc" -eq 2 ] && printf "%s" "$out" | grep -q "usage" &&
+  { [ ! -e "$0/git5.log" ] || ! grep -q "stub-git" "$0/git5.log"; }' "$SANDBOX" "$REPO_ROOT"
 t "bootstrap --help exits before git" bash -c '
   stub="$0/stubbin4"; mkdir -p "$stub"
   printf "#!/usr/bin/env bash\necho stub-git >> \"$0/git4.log\"\n" > "$stub/git"
@@ -179,6 +210,13 @@ t "install.sh full sandbox run links, verifies, smokes" bash -c '
   printf "%s" "$out" | grep -q "SMOKE.*sources silently OK" &&
   printf "%s" "$out" | grep -q "^DONE: 6 links OK" &&
   HOME="$d" "$1/link.sh" --verify >/dev/null 2>&1' "$SANDBOX" "$REPO_ROOT"
+t "link abort leaves no ~/git behind" bash -c '
+  src="$1/.config/starship.toml"
+  restore() { mv "$src.hide" "$src"; }; trap restore EXIT INT TERM
+  d="$0/nogit"; mkdir -p "$d"; ln -sfn "$1" "$d/dotfiles" &&
+  mv "$src" "$src.hide" &&
+  out=$(HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" 2>&1); rc=$?
+  [ "$rc" -ne 0 ] && [ ! -e "$d/git" ]' "$SANDBOX" "$REPO_ROOT"
 t "linked nvim tree is non-empty" bash -c '
   d="$0/invim"; mkdir -p "$d"; ln -sfn "$1" "$d/dotfiles" &&
   HOME="$d" INSTALL_SANDBOX=1 "$1/install.sh" >/dev/null 2>&1 &&
