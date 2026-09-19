@@ -43,7 +43,7 @@ while read -r src dest; do
     "$HOME"/*) ;;
     *) echo "REFUSE $dest (outside HOME)" >&2; exit 1 ;;
   esac
-  if [ ! -e "$REPO_ROOT/$src" ]; then
+  if [ "$MODE" != "verify" ] && [ ! -e "$REPO_ROOT/$src" ]; then
     echo "SRC-MISSING $REPO_ROOT/$src" >&2; exit 1
   fi
   if [ "$MODE" = "verify" ]; then
