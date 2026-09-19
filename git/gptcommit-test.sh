@@ -36,7 +36,7 @@ check "exit 0 on empty (set -e safe)" "0" "$?"
 
 # ── end-to-end: generation path with stubbed transport ───────────────────────
 FIXTURE=$(mktemp -d)
-trap 'rm -rf "$FIXTURE"' EXIT
+trap 'rm -rf "$FIXTURE"' EXIT INT TERM
 mkdir -p "$FIXTURE/bin" "$FIXTURE/repo"
 cat > "$FIXTURE/bin/curl" <<'EOF'
 #!/bin/sh
