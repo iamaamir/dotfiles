@@ -131,7 +131,8 @@ info "✅  API key found"
 
 # ── Gather staged files & diff ──────────────────────────────────────────────
 STAGED_FILES=$(git diff --cached --name-only)
-STAGED_COUNT=$(grep -cve '^$' <<<"$STAGED_FILES")
+# Robust count via NUL-separated output (filenames with newlines miscounted by grep -c)
+STAGED_COUNT=$(git diff --cached --name-only -z | tr -cd '\000' | wc -c | tr -d ' ')
 info "📂  Found $STAGED_COUNT staged file(s)"
 if (( STAGED_COUNT == 0 )); then
   warn "No staged changes; skipping AI hook."
@@ -156,15 +157,20 @@ if ! grep -q '^+[^+]' <<<"$DIFF"; then
   )
 
   if ((${#FALLBACKS[@]})); then
-    echo "🎯 No additions detected. Choose a fallback:" >&2
-    select opt in "${FALLBACKS[@]}" "Custom message"; do
-      if [[ $opt == "Custom message" ]]; then
-        read -rp "Enter custom commit message: " COMMIT_MSG
-      else
-        COMMIT_MSG="$opt"
-      fi
-      break
-    done
+    if [ ! -t 0 ]; then
+      # Non-interactive (hook without TTY): never block on select; take first.
+      COMMIT_MSG="${FALLBACKS[0]}"
+    else
+      echo "🎯 No additions detected. Choose a fallback:" >&2
+      select opt in "${FALLBACKS[@]}" "Custom message"; do
+        if [[ $opt == "Custom message" ]]; then
+          read -rp "Enter custom commit message: " COMMIT_MSG
+        else
+          COMMIT_MSG="$opt"
+        fi
+        break
+      done
+    fi
   else
     FIRST=$(head -n1 <<<"$STAGED_FILES")
     COMMIT_MSG="feat: add $(basename "$FIRST")"
@@ -175,8 +181,10 @@ if ! grep -q '^+[^+]' <<<"$DIFF"; then
 fi
 
 # ── Branch & ticket inference ───────────────────────────────────────────────
+# Canonical ticket rule for this repo: [A-Z]{2,}-[0-9]+ (shared with the
+# legacy prepare-commit-msg hook; keep both in sync, prefer this file).
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
-if [[ $BRANCH =~ ([A-Z]+-[0-9]+) ]]; then
+if [[ $BRANCH =~ ([A-Z]{2,}-[0-9]+) ]]; then
   TICKET=${BASH_REMATCH[1]}
   info "🔖  Detected ticket: $TICKET"
 else
@@ -184,10 +192,14 @@ else
   info "🔖  No ticket ID found"
 fi
 
-# ── Scope inference ─────────────────────────────────────────────────────────
+# ── Scope inference (top-level dir of first staged path; empty at root) ────
 IFS=$'\n' read -rd '' -a FILE_ARR <<<"$STAGED_FILES" || true
 if (( ${#FILE_ARR[@]} )); then
-  SCOPE=$(cut -d/ -f1 <<<"${FILE_ARR[0]}")
+  if [[ "${FILE_ARR[0]}" == */* ]]; then
+    SCOPE=$(cut -d/ -f1 <<<"${FILE_ARR[0]}")
+  else
+    SCOPE=""
+  fi
   info "💡  Inferred scope: $SCOPE"
 else
   SCOPE=""
@@ -207,6 +219,9 @@ LAST_MSG=""
 generate() {
   info "🤖  Generating AI draft…"
   local prompt payload response code attempt wait
+  # Per-run temp file (fixed /tmp/gpt.json raced parallel commits)
+  local tmp_json
+  tmp_json=$(mktemp /tmp/gptcommit-XXXXXX.json)
   prompt="Generate a Conventional Commit message"
   [[ -n $SCOPE ]] && prompt+=" for scope '$SCOPE'"
   prompt+=":\n\`\`\`diff
@@ -222,13 +237,13 @@ $DIFF
     '{model:$m,temperature:$t,messages:[{role:"system",content:$sys},{role:"user",content:$usr}]}')
 
   for attempt in $(seq 1 $MAX_TRIES); do
-    http=$(curl -sS -w "%{http_code}" -o /tmp/gpt.json \
+    http=$(curl -sS -w "%{http_code}" -o "$tmp_json" \
       -H "Authorization: Bearer $OPENAI_API_KEY" \
       -H "Content-Type: application/json" \
       -d "$payload" \
       https://api.openai.com/v1/chat/completions)
     code=${http: -3}
-    response=$(< /tmp/gpt.json)
+    response=$(< "$tmp_json")
     if (( code == 200 )); then
       break
     elif (( code == 429 || code >= 500 )); then
@@ -241,6 +256,7 @@ $DIFF
   done
 
   jq -r '.choices[0].message.content // empty' <<<"$response"
+  rm -f "$tmp_json"
 }
 
 # ── Generate & clean up ──────────────────────────────────────────────────────
