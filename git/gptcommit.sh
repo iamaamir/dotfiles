@@ -264,7 +264,9 @@ $DIFF
     fi
   done
 
-  jq -r '.choices[0].message.content // empty' <<<"$response"
+  # `|| true`: invalid JSON must not trip set -e — the empty result
+  # falls through to the `chore:` fallback below instead of aborting the hook.
+  jq -r '.choices[0].message.content // empty' <<<"$response" || true
 }
 
 # ── Generate & clean up ──────────────────────────────────────────────────────
