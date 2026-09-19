@@ -12,7 +12,13 @@ if ! command -v git >/dev/null 2>&1; then
   exit 1
 fi
 if [ -d "$REPO_DIR/.git" ]; then
-  git -C "$REPO_DIR" pull --ff-only
+  git -C "$REPO_DIR" pull --ff-only || {
+    echo "git pull --ff-only failed (diverged?); cd $REPO_DIR and reconcile, then re-run." >&2
+    exit 1
+  }
+elif [ -e "$REPO_DIR" ]; then
+  echo "$REPO_DIR exists and is not a git checkout; move it aside, then re-run." >&2
+  exit 1
 else
   git clone "$REPO_URL" "$REPO_DIR"
 fi
