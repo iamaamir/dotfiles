@@ -10,8 +10,11 @@ if [[ -n "$WEZTERM_PANE" ]]; then
     source "$WEZTERM_EXECUTABLE_DIR/../Resources/wezterm.sh"
 fi
 
-export EDITOR="/opt/homebrew/bin/nvim"
-export GIT_CONFIG_GLOBAL=$HOME/dotfiles/git/.gitconfig
+if [[ -z "${EDITOR:-}" ]]; then
+  if command -v nvim >/dev/null 2>&1; then EDITOR="$(command -v nvim)"; else EDITOR="vim"; fi
+  export EDITOR
+fi
+export GIT_CONFIG_GLOBAL="$HOME/dotfiles/git/.gitconfig"
 export BAT_THEME="gruvbox-dark"
 
 # --- PATH assembly (one place; first writer wins, no duplicates) ---
@@ -39,13 +42,19 @@ path_append "$HOME/.lmstudio/bin"  # Added by LM Studio CLI (lms)
 path_prepend "$HOME/.kimi-code/bin"  # kimi-code
 [[ -f "$HOME/.local/bin/env" ]] && . "$HOME/.local/bin/env"
 
-eval "$(fnm env --use-on-cd)"
-eval "$(pyenv init - zsh)"
+if command -v fnm >/dev/null 2>&1; then
+  eval "$(fnm env --use-on-cd)"
+fi
+if command -v pyenv >/dev/null 2>&1; then
+  eval "$(pyenv init - zsh)"
+fi
 
 # Completions snapshot the final PATH, so compinit runs after all PATH edits.
 autoload -Uz compinit && compinit -C
 
-eval "$(starship init zsh)"
+if command -v starship >/dev/null 2>&1; then
+  eval "$(starship init zsh)"
+fi
 
 source ~/dotfiles/zsh/functions/source_if_exists.zsh
 
@@ -62,10 +71,26 @@ source_if_exists "${files_to_source[@]}"
 #test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
 # Highlighting stack order matters: autosuggestions, vi-mode, then
-# syntax-highlighting LAST per upstream docs.
-source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-source $(brew --prefix)/opt/zsh-vi-mode/share/zsh-vi-mode/zsh-vi-mode.plugin.zsh
-source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+# syntax-highlighting LAST per upstream docs. Each guarded so a fresh
+# clone without these packages still starts a working shell.
+if command -v brew >/dev/null 2>&1; then
+  _brew_prefix="$(brew --prefix)"
+  [[ -f "$_brew_prefix/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]] && \
+    source "$_brew_prefix/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+  [[ -f "$_brew_prefix/opt/zsh-vi-mode/share/zsh-vi-mode/zsh-vi-mode.plugin.zsh" ]] && \
+    source "$_brew_prefix/opt/zsh-vi-mode/share/zsh-vi-mode/zsh-vi-mode.plugin.zsh"
+  # Prefer the brew prefix (works on Intel too); keep the Apple-Silicon
+  # default path as fallback for hand-installed highlighting.
+  for _shl_syntax in "$_brew_prefix/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" \
+                     /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh; do
+    if [[ -f "$_shl_syntax" ]]; then source "$_shl_syntax"; break; fi
+  done
+  unset _brew_prefix _shl_syntax
+else
+  # No brew: still try the well-known default location.
+  [[ -f /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] && \
+    source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+fi
 # eval "$(gh copilot alias -- zsh)"
 
 # tabtab source for packages
@@ -78,7 +103,15 @@ if (( $+commands[kubectl] )); then
   _kubectl_cache="$HOME/.cache/zsh/kubectl-completion.zsh"
   if [[ ! -f "$_kubectl_cache" ]] || [[ -n $(find "$_kubectl_cache" -mtime +1 2>/dev/null) ]]; then
     mkdir -p "${HOME}/.cache/zsh"
-    kubectl completion zsh >| "$_kubectl_cache" 2>/dev/null || true
+    _kubectl_tmp="$_kubectl_cache.tmp.$$"
+    # Only move into place on success: a failed completion must never
+    # poison the cache with an empty file for the next 24h.
+    if kubectl completion zsh >| "$_kubectl_tmp" 2>/dev/null && [[ -s "$_kubectl_tmp" ]]; then
+      mv -f "$_kubectl_tmp" "$_kubectl_cache"
+    else
+      rm -f "$_kubectl_tmp"
+    fi
+    unset _kubectl_tmp
   fi
   [[ -f "$_kubectl_cache" ]] && source "$_kubectl_cache"
   unset _kubectl_cache
