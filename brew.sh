@@ -84,7 +84,6 @@ brew install ack
 brew install git
 brew install git-gui
 brew install git-lfs
-brew install stow
 brew install --cask flux
 brew install --cask raycast
 brew install --cask shottr

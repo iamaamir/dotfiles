@@ -1,0 +1,17 @@
+# Machine-local secrets. Copy to privatealiases.zsh (gitignored) and fill in.
+# The installer creates the copy for you on fresh machines.
+export OPEN_AI=""
+
+# export openrouter=""
+# export groq=""
+# export cerebras=""
+
+export AMO_API_KEY=""
+export AMO_API_SECRET=""
+
+# stackoverflow agent
+export SOFA_API_KEY=""
+export SOFA_BASE_URL=""
+
+# typesafe/JEV
+export TYPESAFE_API_KEY=""

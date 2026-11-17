@@ -1,0 +1,8 @@
+# links.txt — repo-rel-path <whitespace> home-rel-path (~ = $HOME).
+# Files that are sourced (not linked) get no line. No spaces in paths.
+zsh/.zshrc ~/.zshrc
+zsh/.zshenv ~/.zshenv
+.config/starship.toml ~/.config/starship.toml
+.config/tmux ~/.config/tmux
+.config/wezterm-config ~/.config/wezterm-config
+.config/nvim ~/.config/nvim
