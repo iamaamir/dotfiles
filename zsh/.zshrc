@@ -71,6 +71,7 @@ files_to_source=(
     /opt/homebrew/etc/profile.d/autojump.sh
    ~/dotfiles/zsh/functions/gh.sh
    ~/dotfiles/zsh/functions/openprs.sh
+   ~/dotfiles/zsh/functions/vrg.sh
 )
 source_if_exists "${files_to_source[@]}"
 
