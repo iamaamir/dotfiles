@@ -5,6 +5,7 @@
     email = 8420386+iamaamir@users.noreply.github.com
 
 [alias]
+  difft = -c diff.external=difft diff
   # Sharable diff with disabled diff-so-fancy and +/- marks
     patch = !git --no-pager diff --no-color
   # Compact and readable log
